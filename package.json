@@ -74,7 +74,8 @@
   },
   "scripts": {
     "start": "node scripts/start.js",
-    "build": "node scripts/build.js",
+    "predeploy": "node scripts/build.js",
+    "deploy" : "gh-pages -d build",
     "test": "node scripts/test.js"
   },
   "eslintConfig": {
@@ -102,6 +103,7 @@
   },
   "devDependencies": {
     "@types/money": "^0.2.3",
+    "gh-pages": "^6.1.1",
     "prettier": "3.2.5"
   },
   "jest": {
