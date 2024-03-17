@@ -109,15 +109,26 @@ export function App() {
     <ThemeProvider theme={theme}>
       <Container
         maxWidth="sm"
-        sx={{
+        sx={(theme) => ({
           p: 0,
-          display: "flex",
-          height: "100vh",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
+
+          [theme.breakpoints.up("sm")]: {
+            height: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+          },
+        })}
       >
-        <Paper>
+        <Paper
+          sx={{
+            my: "auto",
+            display: "flex",
+            maxHeight: "100vh",
+            flexDirection: "column",
+            overflow: "hidden",
+          }}
+        >
           <Box sx={{ px: 1, py: 2, borderBottom: "1px #ddd solid" }}>
             <Grid
               container

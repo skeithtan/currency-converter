@@ -5,29 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b478837d-3ef8-4428-891c-15c32a6d78a0" name="Changes" comment="">
-      <change afterPath="$USER_HOME$/WebstormProjects/currency-converter/config/env.js" afterDir="false" />
-      <change afterPath="$USER_HOME$/WebstormProjects/currency-converter/config/getHttpsConfig.js" afterDir="false" />
-      <change afterPath="$USER_HOME$/WebstormProjects/currency-converter/config/jest/babelTransform.js" afterDir="false" />
-      <change afterPath="$USER_HOME$/WebstormProjects/currency-converter/config/jest/cssTransform.js" afterDir="false" />
-      <change afterPath="$USER_HOME$/WebstormProjects/currency-converter/config/jest/fileTransform.js" afterDir="false" />
-      <change afterPath="$USER_HOME$/WebstormProjects/currency-converter/config/modules.js" afterDir="false" />
-      <change afterPath="$USER_HOME$/WebstormProjects/currency-converter/config/paths.js" afterDir="false" />
-      <change afterPath="$USER_HOME$/WebstormProjects/currency-converter/config/webpack.config.js" afterDir="false" />
-      <change afterPath="$USER_HOME$/WebstormProjects/currency-converter/config/webpack/persistentCache/createEnvironmentHash.js" afterDir="false" />
-      <change afterPath="$USER_HOME$/WebstormProjects/currency-converter/config/webpackDevServer.config.js" afterDir="false" />
-      <change afterPath="$USER_HOME$/WebstormProjects/currency-converter/scripts/build.js" afterDir="false" />
-      <change afterPath="$USER_HOME$/WebstormProjects/currency-converter/scripts/start.js" afterDir="false" />
-      <change afterPath="$USER_HOME$/WebstormProjects/currency-converter/scripts/test.js" afterDir="false" />
-      <change afterPath="$USER_HOME$/WebstormProjects/currency-converter/src/utils/fetchConversion.ts" afterDir="false" />
-      <change beforePath="$USER_HOME$/WebstormProjects/currency-converter/.prettierrc" beforeDir="false" afterPath="$USER_HOME$/WebstormProjects/currency-converter/.prettierrc" afterDir="false" />
-      <change beforePath="$USER_HOME$/WebstormProjects/currency-converter/package-lock.json" beforeDir="false" afterPath="$USER_HOME$/WebstormProjects/currency-converter/package-lock.json" afterDir="false" />
       <change beforePath="$USER_HOME$/WebstormProjects/currency-converter/package.json" beforeDir="false" afterPath="$USER_HOME$/WebstormProjects/currency-converter/package.json" afterDir="false" />
       <change beforePath="$USER_HOME$/WebstormProjects/currency-converter/src/App.tsx" beforeDir="false" afterPath="$USER_HOME$/WebstormProjects/currency-converter/src/App.tsx" afterDir="false" />
-      <change beforePath="$USER_HOME$/WebstormProjects/currency-converter/src/components/CurrencyRow.tsx" beforeDir="false" afterPath="$USER_HOME$/WebstormProjects/currency-converter/src/components/CurrencyRow.tsx" afterDir="false" />
-      <change beforePath="$USER_HOME$/WebstormProjects/currency-converter/src/decs.d.ts" beforeDir="false" afterPath="$USER_HOME$/WebstormProjects/currency-converter/src/decs.d.ts" afterDir="false" />
-      <change beforePath="$USER_HOME$/WebstormProjects/currency-converter/src/index.tsx" beforeDir="false" afterPath="$USER_HOME$/WebstormProjects/currency-converter/src/index.tsx" afterDir="false" />
-      <change beforePath="$USER_HOME$/WebstormProjects/currency-converter/src/react-app-env.d.ts" beforeDir="false" afterPath="$USER_HOME$/WebstormProjects/currency-converter/src/react-app-env.d.ts" afterDir="false" />
-      <change beforePath="$USER_HOME$/WebstormProjects/currency-converter/yarn.lock" beforeDir="false" afterPath="$USER_HOME$/WebstormProjects/currency-converter/yarn.lock" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,9 +49,10 @@
     "nodejs_interpreter_path": "node",
     "nodejs_package_manager_path": "npm",
     "npm.build.executor": "Run",
+    "npm.deploy.executor": "Run",
     "npm.eject.executor": "Run",
     "npm.npm start.executor": "Run",
-    "settings.editor.selected.configurable": "preferences.sourceCode.HTML",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "ts.external.directory.path": "/Users/skeithtan/WebstormProjects/currency-converter/node_modules/typescript/lib",
     "vue.rearranger.settings.migration": "true"
   }
@@ -81,8 +61,12 @@
     <key name="es6.move.members.recent.items">
       <recent name="$USER_HOME$/WebstormProjects/currency-converter/src/utils/fetchConversion.ts" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$USER_HOME$/WebstormProjects/currency-converter/build" />
+      <recent name="$USER_HOME$/WebstormProjects/currency-converter" />
+    </key>
   </component>
-  <component name="RunManager" selected="npm.build">
+  <component name="RunManager" selected="npm.deploy">
     <configuration name="Debug Application" type="JavascriptDebugType" uri="http://localhost:3000">
       <method v="2" />
     </configuration>
@@ -91,6 +75,16 @@
       <command value="run" />
       <scripts>
         <script value="build" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="deploy" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="/$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="deploy" />
       </scripts>
       <node-interpreter value="project" />
       <envs />
@@ -118,6 +112,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="npm.deploy" />
         <item itemvalue="npm.build" />
         <item itemvalue="npm.eject" />
       </list>
@@ -131,7 +126,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1710487609506</updated>
-      <workItem from="1710487610594" duration="21773000" />
+      <workItem from="1710487610594" duration="25755000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit">
       <option name="closed" value="true" />
@@ -157,7 +152,39 @@
       <option name="project" value="LOCAL" />
       <updated>1710497516273</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Initial commit">
+      <option name="closed" value="true" />
+      <created>1710626333781</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1710626333782</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Initial commit">
+      <option name="closed" value="true" />
+      <created>1710626348348</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1710626348348</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Initial commit">
+      <option name="closed" value="true" />
+      <created>1710626382712</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1710626382712</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Update runner">
+      <option name="closed" value="true" />
+      <created>1710628119130</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1710628119130</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -178,7 +205,8 @@
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_NEW_TODO" value="false" />
     <MESSAGE value="Initial commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="Initial commit" />
+    <MESSAGE value="Update runner" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update runner" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />
