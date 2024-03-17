@@ -1,31 +1,15 @@
 import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Button,
-  Container,
-  Dialog,
-  Grid,
-  IconButton,
-  InputAdornment,
-  InputBase,
-  Paper,
-  ThemeProvider,
-  Typography,
-} from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
+import { Container, Paper, ThemeProvider } from "@mui/material";
 import { theme } from "./theme";
-import fx from "money";
-import { CurrencyRow } from "./components/CurrencyRow";
-import currencyToSymbolMap from "currency-symbol-map/map";
-import { getEmojiByCurrencyCode } from "country-currency-emoji-flags";
+import { CurrencyDisplay } from "./components/CurrencyDisplay";
+import { AddCurrencyView } from "./components/AddCurrencyView";
+import { CurrencyRowData } from "./types/CurrencyRowData";
 import { fetchConversion } from "./utils/fetchConversion";
-
-const LOCALSTORAGE_KEY = "currencyRows";
+import fx from "money";
+import { SearchSuggestionData } from "./types/SearchSuggestionData";
 
 export function App() {
-  const [isEditing, setIsEditing] = useState(false);
-  const [dialogIsOpen, setDialogIsOpen] = useState(false);
-  const [currencyCodeInput, setCurrencyCodeInput] = useState("");
+  const [isAddingCurrency, setIsAddingCurrency] = useState(false);
   const [currencyRows, setCurrencyRows] = useState<CurrencyRowData[]>(() => {
     const localStorageState = localStorage.getItem(LOCALSTORAGE_KEY);
     if (!localStorageState) {
@@ -43,6 +27,36 @@ export function App() {
   useEffect(() => {
     localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(currencyRows));
   }, [currencyRows]);
+
+  async function handleAddRow({ code, emoji, symbol }: SearchSuggestionData) {
+    if (currencyRows.length === 0) {
+      const newRow = {
+        code,
+        emoji,
+        isLoading: false,
+        value: "0",
+        symbol,
+      };
+
+      setCurrencyRows((rows) => [...rows, newRow]);
+      return;
+    }
+
+    if (currencyRows.some((row) => row.code === code)) {
+      // No duplicate codes
+      return;
+    }
+
+    const baseRow = currencyRows[0];
+    await fetchConversion();
+
+    const value = Number(
+      fx.convert(parseFloat(baseRow.value?.toString() ?? "0"), { from: baseRow.code, to: code }),
+    ).toFixed(2);
+    const newRow = { code, emoji, isLoading: false, value, symbol };
+
+    setCurrencyRows(rows => [...rows, newRow]);
+  }
 
   async function handleRowValueChange(row: CurrencyRowData, newValue: number) {
     if (isNaN(newValue)) {
@@ -75,32 +89,6 @@ export function App() {
     );
   }
 
-  function handleDialogDismiss() {
-    setDialogIsOpen(false);
-    setCurrencyCodeInput("");
-  }
-
-  function handleCurrencyAdd() {
-    setDialogIsOpen(false);
-    setCurrencyCodeInput("");
-
-    const newCurrencyCode = currencyCodeInput.toUpperCase();
-    if (currencyRows.some((row) => row.code === newCurrencyCode)) {
-      return;
-    }
-
-    setCurrencyRows([
-      ...currencyRows,
-      {
-        isLoading: false,
-        symbol: currencyToSymbolMap[newCurrencyCode],
-        emoji: getEmojiByCurrencyCode(newCurrencyCode),
-        code: newCurrencyCode,
-        value: "0",
-      },
-    ]);
-  }
-
   function handleRemoveRow(row: CurrencyRowData) {
     setCurrencyRows((rows) => rows.filter((r) => r !== row));
   }
@@ -129,116 +117,26 @@ export function App() {
             overflow: "hidden",
           }}
         >
-          <Box sx={{ px: 1, py: 2, borderBottom: "1px #ddd solid" }}>
-            <Grid
-              container
-              alignItems="center"
-              justifyContent="space-between"
-            >
-              {!isEditing && (
-                <Grid item>
-                  <Button onClick={() => setIsEditing(true)}>Modify</Button>
-                </Grid>
-              )}
-
-              {!isEditing && (
-                <Grid item>
-                  <Button
-                    endIcon={<AddIcon />}
-                    onClick={() => setDialogIsOpen(true)}
-                  >
-                    Add
-                  </Button>
-                </Grid>
-              )}
-
-              {isEditing && (
-                <Grid item>
-                  <Button onClick={() => setIsEditing(false)}>Done</Button>
-                </Grid>
-              )}
-            </Grid>
-
-            <Typography
-              variant="h4"
-              sx={{ px: 1, pt: 1 }}
-            >
-              Currencies
-            </Typography>
-          </Box>
-          <Box sx={{ overflow: "auto" }}>
-            {currencyRows.map((row) => (
-              <CurrencyRow
-                key={row.code}
-                code={row.code}
-                emoji={row.emoji}
-                symbol={row.symbol}
-                value={row.value}
-                isLoading={row.isLoading}
-                isEditing={isEditing}
-                onValueChange={(newValue) =>
-                  handleRowValueChange(row, newValue)
-                }
-                onRemove={() => handleRemoveRow(row)}
-              />
-            ))}
-          </Box>
+          {!isAddingCurrency &&
+            <CurrencyDisplay
+              onAddCurrencyClick={() => setIsAddingCurrency(true)}
+              currencyRows={currencyRows}
+              onRowValueChange={handleRowValueChange}
+              onRemoveRow={handleRemoveRow}
+            />
+          }
+          {isAddingCurrency &&
+            <AddCurrencyView
+              onFinish={() => setIsAddingCurrency(false)}
+              onAddRow={handleAddRow}
+              currencyRows={currencyRows}
+            />
+          }
         </Paper>
       </Container>
-
-      <Dialog
-        disablePortal
-        open={dialogIsOpen}
-        onClose={handleDialogDismiss}
-      >
-        <Typography
-          variant="h6"
-          sx={{ px: 1, pt: 1 }}
-        >
-          Add currency by code
-        </Typography>
-
-        <Box sx={{ display: "flex" }}>
-          <InputBase
-            sx={{ ml: 1 }}
-            onChange={(event) => setCurrencyCodeInput(event.target.value)}
-            startAdornment={
-              getEmojiByCurrencyCode(currencyCodeInput) && (
-                <InputAdornment position="start">
-                  {getEmojiByCurrencyCode(currencyCodeInput)}
-                </InputAdornment>
-              )
-            }
-            inputRef={(inputRef) => {
-              if (!inputRef) {
-                return;
-              }
-
-              // Focus when the dialog has been shown
-              setTimeout(() => {
-                inputRef.focus();
-              }, 100);
-            }}
-          />
-
-          <IconButton
-            type="button"
-            size="large"
-            disabled={getEmojiByCurrencyCode(currencyCodeInput) == null}
-            onClick={handleCurrencyAdd}
-          >
-            <AddIcon />
-          </IconButton>
-        </Box>
-      </Dialog>
     </ThemeProvider>
   );
 }
 
-interface CurrencyRowData {
-  code: string;
-  emoji?: string;
-  symbol: string;
-  value?: string;
-  isLoading: boolean;
-}
+const LOCALSTORAGE_KEY = "currencyRows";
+
