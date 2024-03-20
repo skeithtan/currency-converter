@@ -7,6 +7,8 @@ import { SearchSuggestionRow } from "./SearchSuggestionRow";
 import currencyToSymbolMap from "currency-symbol-map/map";
 import { SearchSuggestionData } from "../types/SearchSuggestionData";
 import { focusAndOpenKeyboard } from "../utils/focusAndOpenKeyboard";
+import EuroSymbolIcon from "@mui/icons-material/EuroSymbol";
+import { EmptyState } from "./EmptyState";
 
 export function AddCurrencyView({ onFinish, onAddRow, currencyRows }: AddCurrencyViewProps) {
   const [searchValue, setSearchValue] = useState("");
@@ -72,6 +74,13 @@ export function AddCurrencyView({ onFinish, onAddRow, currencyRows }: AddCurrenc
             }}
           />
         ))}
+
+        {suggestions.length === 0 && (
+          <EmptyState
+            icon={EuroSymbolIcon}
+            emptyText="Type a currency code to see the search results"
+          />
+        )}
 
       </Box>
     </>

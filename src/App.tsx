@@ -112,9 +112,15 @@ export function App() {
           sx={{
             my: "auto",
             display: "flex",
-            maxHeight: "100vh",
             flexDirection: "column",
-            overflow: "hidden",
+
+            [theme.breakpoints.up("sm")]: {
+              maxHeight: "90vh",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              overflow: "hidden",
+            },
           }}
         >
           {!isAddingCurrency &&
@@ -125,6 +131,7 @@ export function App() {
               onRemoveRow={handleRemoveRow}
             />
           }
+
           {isAddingCurrency &&
             <AddCurrencyView
               onFinish={() => setIsAddingCurrency(false)}

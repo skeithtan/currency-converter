@@ -5,8 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b478837d-3ef8-4428-891c-15c32a6d78a0" name="Changes" comment="">
-      <change beforePath="$USER_HOME$/WebstormProjects/currency-converter/package.json" beforeDir="false" afterPath="$USER_HOME$/WebstormProjects/currency-converter/package.json" afterDir="false" />
+      <change afterPath="$USER_HOME$/WebstormProjects/currency-converter/src/components/EmptyState.tsx" afterDir="false" />
+      <change beforePath="$USER_HOME$/WebstormProjects/currency-converter/.idea/workspace.xml" beforeDir="false" afterPath="$USER_HOME$/WebstormProjects/currency-converter/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$USER_HOME$/WebstormProjects/currency-converter/src/App.tsx" beforeDir="false" afterPath="$USER_HOME$/WebstormProjects/currency-converter/src/App.tsx" afterDir="false" />
+      <change beforePath="$USER_HOME$/WebstormProjects/currency-converter/src/components/AddCurrencyView.tsx" beforeDir="false" afterPath="$USER_HOME$/WebstormProjects/currency-converter/src/components/AddCurrencyView.tsx" afterDir="false" />
+      <change beforePath="$USER_HOME$/WebstormProjects/currency-converter/src/components/CurrencyDisplay.tsx" beforeDir="false" afterPath="$USER_HOME$/WebstormProjects/currency-converter/src/components/CurrencyDisplay.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,9 +62,14 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="es6.move.members.recent.items">
-      <recent name="$USER_HOME$/WebstormProjects/currency-converter/src/utils/fetchConversion.ts" />
+      <recent name="$USER_HOME$/WebstormProjects/currency-converter/src/types/SearchSuggestion.ts" />
+      <recent name="$USER_HOME$/WebstormProjects/currency-converter/src/components/SearchSuggestionRow.tsx" />
+      <recent name="$USER_HOME$/WebstormProjects/currency-converter/src/types/CurrencyRowData.ts" />
+      <recent name="$USER_HOME$/WebstormProjects/currency-converter/src/components/CurrencyDisplayProps.tsx" />
+      <recent name="$USER_HOME$/WebstormProjects/currency-converter/src/utils/focusAndOpenKeyboard.ts" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$USER_HOME$/WebstormProjects/currency-converter/public" />
       <recent name="$USER_HOME$/WebstormProjects/currency-converter/build" />
       <recent name="$USER_HOME$/WebstormProjects/currency-converter" />
     </key>
@@ -126,7 +134,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1710487609506</updated>
-      <workItem from="1710487610594" duration="25755000" />
+      <workItem from="1710487610594" duration="34100000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit">
       <option name="closed" value="true" />
@@ -184,7 +192,39 @@
       <option name="project" value="LOCAL" />
       <updated>1710628119130</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Center card on desktop UI">
+      <option name="closed" value="true" />
+      <created>1710667638866</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1710667638866</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Center card on desktop UI">
+      <option name="closed" value="true" />
+      <created>1710667886328</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1710667886328</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Create new search currency view">
+      <option name="closed" value="true" />
+      <created>1710672126666</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1710672126666</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Update app logo, name, PWA settings">
+      <option name="closed" value="true" />
+      <created>1710926345235</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1710926345235</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -195,7 +235,19 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="HEAD" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>
@@ -206,7 +258,10 @@
     <option name="CHECK_NEW_TODO" value="false" />
     <MESSAGE value="Initial commit" />
     <MESSAGE value="Update runner" />
-    <option name="LAST_COMMIT_MESSAGE" value="Update runner" />
+    <MESSAGE value="Center card on desktop UI" />
+    <MESSAGE value="Create new search currency view" />
+    <MESSAGE value="Update app logo, name, PWA settings" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update app logo, name, PWA settings" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />

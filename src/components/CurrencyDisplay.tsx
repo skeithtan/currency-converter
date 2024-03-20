@@ -1,8 +1,10 @@
 import { Box, Button, Grid, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { CurrencyRow } from "./CurrencyRow";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { CurrencyRowData } from "../types/CurrencyRowData";
+import { EmptyState } from "./EmptyState";
+import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
 
 
 export function CurrencyDisplay({
@@ -12,6 +14,12 @@ export function CurrencyDisplay({
                                   onRemoveRow,
                                 }: CurrencyDisplayProps) {
   const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (currencyRows.length === 0 && isEditing) {
+      setIsEditing(false);
+    }
+  }, [currencyRows.length, isEditing]);
 
   return (
     <>
@@ -23,7 +31,10 @@ export function CurrencyDisplay({
         >
           {!isEditing && (
             <Grid item>
-              <Button onClick={() => setIsEditing(true)}>Modify</Button>
+              <Button
+                disabled={currencyRows.length === 0}
+                onClick={() => setIsEditing(true)}
+              >Modify</Button>
             </Grid>
           )}
 
@@ -68,6 +79,15 @@ export function CurrencyDisplay({
             onRemove={() => onRemoveRow(row)}
           />
         ))}
+
+        {currencyRows.length === 0 && (
+          <EmptyState
+            icon={CurrencyExchangeIcon}
+            emptyText="Add at least two currencies to see the conversion."
+            buttonText="Add a currency"
+            onButtonClick={onAddCurrencyClick}
+          />
+        )}
       </Box>
     </>
   );
