@@ -16,6 +16,12 @@ export function CurrencyRow({
   const inputRef = useRef<HTMLInputElement>();
   const [isUpdatingValue, setIsUpdatingValue] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const formatter = new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: code,
+    currencyDisplay: "narrowSymbol"
+  });
+  const formattedNumber = value ? formatter.format(parseFloat(value)) : undefined;
 
   function handleClick() {
     if (isLoading || isEditing) {
@@ -93,7 +99,7 @@ export function CurrencyRow({
                 variant="h5"
                 align="right"
               >
-                {symbol} {value}
+                {formattedNumber}
               </Typography>
             )}
 
