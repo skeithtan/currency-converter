@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Container, Paper, ThemeProvider } from "@mui/material";
-import { theme } from "./theme";
+import { useTheme } from "./theme";
 import { CurrencyDisplay } from "./components/CurrencyDisplay";
 import { AddCurrencyView } from "./components/AddCurrencyView";
 import { CurrencyRowData } from "./types/CurrencyRowData";
@@ -24,6 +24,7 @@ export function App() {
     }
   });
 
+  const theme = useTheme();
   useEffect(() => {
     localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(currencyRows));
   }, [currencyRows]);

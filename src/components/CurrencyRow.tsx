@@ -19,7 +19,8 @@ export function CurrencyRow({
   const formatter = new Intl.NumberFormat(undefined, {
     style: "currency",
     currency: code,
-    currencyDisplay: "narrowSymbol"
+    currencyDisplay: "narrowSymbol",
+    useGrouping: true
   });
   const formattedNumber = value ? formatter.format(parseFloat(value)) : undefined;
 
