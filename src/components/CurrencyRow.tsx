@@ -11,7 +11,7 @@ export function CurrencyRow({
                               isLoading,
                               isEditing,
                               onValueChange,
-                              onRemove,
+                              onRemove
                             }: CurrencyRowProps) {
   const inputRef = useRef<HTMLInputElement>();
   const [isUpdatingValue, setIsUpdatingValue] = useState(false);
@@ -34,7 +34,7 @@ export function CurrencyRow({
     }
   }
 
-  function handleBlur() {
+  function endUpdatingValue() {
     setIsUpdatingValue(false);
     const newValue = inputRef.current?.valueAsNumber;
     if (newValue == null) {
@@ -111,7 +111,12 @@ export function CurrencyRow({
               inputRef={inputRef}
               value={inputValue}
               onChange={(event) => setInputValue(event.target.value)}
-              onBlur={handleBlur}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  endUpdatingValue();
+                }
+              }}
+              onBlur={endUpdatingValue}
               startAdornment={
                 <InputAdornment position="start">{symbol}</InputAdornment>
               }
