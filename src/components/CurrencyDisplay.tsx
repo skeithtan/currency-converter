@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { CurrencyRowData } from "../types/CurrencyRowData";
 import { EmptyState } from "./EmptyState";
 import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
+import { useTheme } from "../theme";
 
 
 export function CurrencyDisplay({
@@ -14,6 +15,7 @@ export function CurrencyDisplay({
                                   onRemoveRow,
                                 }: CurrencyDisplayProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const theme = useTheme();
 
   useEffect(() => {
     if (currencyRows.length === 0 && isEditing) {
@@ -23,7 +25,7 @@ export function CurrencyDisplay({
 
   return (
     <>
-      <Box sx={{ px: 1, py: 2, borderBottom: "1px #ddd solid" }}>
+      <Box sx={{ px: 1, py: 2, borderBottom: "1px solid", borderColor: theme.palette.divider }}>
         <Grid
           container
           alignItems="center"

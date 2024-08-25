@@ -1,13 +1,17 @@
 import { createTheme, Theme, useMediaQuery } from "@mui/material";
-import React from "react";
+import React, { useEffect } from "react";
 
 export function useTheme(): Theme {
   const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
-  return React.useMemo(
+
+  const theme = React.useMemo(
     () =>
       createTheme({
         palette: {
-          mode: prefersDarkMode ? "dark" : "light"
+          mode: prefersDarkMode ? "dark" : "light",
+          background: {
+            default: prefersDarkMode ? "#000000" : "#fff"
+          }
         },
         typography: {
           fontFamily: [
@@ -26,4 +30,22 @@ export function useTheme(): Theme {
       }),
     [prefersDarkMode]
   );
+
+  useEffect(() => {
+    setNewThemeColor(theme.palette.background.default);
+  }, [prefersDarkMode, theme.palette.background.default]);
+
+  return theme;
+}
+
+function setNewThemeColor(newThemeColor: string) {
+  const metaThemeColor = document.querySelector("meta[name=\"theme-color\"]");
+  if (metaThemeColor) {
+    metaThemeColor.setAttribute("content", newThemeColor);
+  } else {
+    const newMetaThemeColor = document.createElement("meta");
+    newMetaThemeColor.name = "theme-color";
+    newMetaThemeColor.content = newThemeColor;
+    document.head.appendChild(newMetaThemeColor);
+  }
 }

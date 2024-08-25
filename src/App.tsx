@@ -71,7 +71,7 @@ export function App() {
         }
 
         return { ...r, isLoading: true };
-      }),
+      })
     );
 
     await fetchConversion();
@@ -97,50 +97,57 @@ export function App() {
   return (
     <ThemeProvider theme={theme}>
       <Container
-        maxWidth="sm"
-        sx={(theme) => ({
-          p: 0,
-
-          [theme.breakpoints.up("sm")]: {
-            height: "100vh",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          },
-        })}
+        maxWidth={false}
+        sx={{ background: theme.palette.background.default, padding: 0, minHeight: "100vh", minWidth: "100vw" }}
       >
-        <Paper
-          sx={{
-            my: "auto",
-            display: "flex",
-            flexDirection: "column",
+        <Container
+          maxWidth="sm"
+          sx={(theme) => ({
+            p: 0,
 
             [theme.breakpoints.up("sm")]: {
-              maxHeight: "90vh",
+              height: "100vh",
               display: "flex",
               flexDirection: "column",
-              justifyContent: "center",
-              overflow: "hidden",
-            },
-          }}
+              justifyContent: "center"
+            }
+          })}
         >
-          {!isAddingCurrency &&
-            <CurrencyDisplay
-              onAddCurrencyClick={() => setIsAddingCurrency(true)}
-              currencyRows={currencyRows}
-              onRowValueChange={handleRowValueChange}
-              onRemoveRow={handleRemoveRow}
-            />
-          }
+          <Paper
+            sx={{
+              my: "auto",
+              display: "flex",
+              flexDirection: "column",
+              background: theme.palette.background.default,
 
-          {isAddingCurrency &&
-            <AddCurrencyView
-              onFinish={() => setIsAddingCurrency(false)}
-              onAddRow={handleAddRow}
-              currencyRows={currencyRows}
-            />
-          }
-        </Paper>
+              [theme.breakpoints.up("sm")]: {
+                maxHeight: "90vh",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                overflow: "hidden",
+                background: theme.palette.background.paper
+              }
+            }}
+          >
+            {!isAddingCurrency &&
+              <CurrencyDisplay
+                onAddCurrencyClick={() => setIsAddingCurrency(true)}
+                currencyRows={currencyRows}
+                onRowValueChange={handleRowValueChange}
+                onRemoveRow={handleRemoveRow}
+              />
+            }
+
+            {isAddingCurrency &&
+              <AddCurrencyView
+                onFinish={() => setIsAddingCurrency(false)}
+                onAddRow={handleAddRow}
+                currencyRows={currencyRows}
+              />
+            }
+          </Paper>
+        </Container>
       </Container>
     </ThemeProvider>
   );

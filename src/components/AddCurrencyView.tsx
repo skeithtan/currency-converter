@@ -9,11 +9,13 @@ import { SearchSuggestionData } from "../types/SearchSuggestionData";
 import { focusAndOpenKeyboard } from "../utils/focusAndOpenKeyboard";
 import EuroSymbolIcon from "@mui/icons-material/EuroSymbol";
 import { EmptyState } from "./EmptyState";
+import { useTheme } from "../theme";
 
 export function AddCurrencyView({ onFinish, onAddRow, currencyRows }: AddCurrencyViewProps) {
   const [searchValue, setSearchValue] = useState("");
   const [suggestions, setSearchSuggestions] = useState<SearchSuggestionData[]>([]);
   const inputRef = useRef<HTMLInputElement>();
+  const theme = useTheme();
 
   function handleFinish() {
     setSearchValue("");
@@ -45,7 +47,7 @@ export function AddCurrencyView({ onFinish, onAddRow, currencyRows }: AddCurrenc
 
   return (
     <>
-      <Box sx={{ px: 1, py: 2, borderBottom: "1px #ddd solid" }}>
+      <Box sx={{ px: 1, py: 2, borderBottom: "1px solid", borderColor: theme.palette.divider }}>
         <Button onClick={handleFinish}>Cancel</Button>
         <Typography
           variant="h4"
@@ -55,7 +57,7 @@ export function AddCurrencyView({ onFinish, onAddRow, currencyRows }: AddCurrenc
         </Typography>
       </Box>
       <InputBase
-        sx={{ p: 1, pl: 2, flex: 1, borderBottom: "1px #ddd solid" }}
+        sx={{ p: 1, pl: 2, flex: 1, borderBottom: "1px solid", borderColor: theme.palette.divider }}
         inputRef={inputRef}
         placeholder="Search currency codes"
         value={searchValue}

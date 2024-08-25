@@ -20,7 +20,7 @@
     name="apple-mobile-web-app-capable"
   >
   <meta
-    content="light-content"
+    content="default"
     name="apple-mobile-web-app-status-bar-style"
   >
   <meta
@@ -35,6 +35,11 @@
     href="%PUBLIC_URL%/logo192.png"
     rel="apple-touch-icon"
   />
+  <style>
+      body {
+          -webkit-user-select: none;
+      }
+  </style>
   <!--
     manifest.json provides metadata used when your web app is installed on a
     user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
