@@ -16,6 +16,7 @@ import { focusAndOpenKeyboard } from "../utils/focusAndOpenKeyboard.ts";
 import EuroSymbolIcon from "@mui/icons-material/EuroSymbol";
 import { EmptyState } from "./EmptyState.tsx";
 import { useTheme } from "../theme.ts";
+import { KeyboardEvent } from "npm:@types/react@19.1.8";
 
 export function AddCurrencyView(
   { onFinish, onAddRow, currencyRows }: AddCurrencyViewProps,
@@ -57,6 +58,29 @@ export function AddCurrencyView(
 
     setSearchSuggestions(newSuggestions);
   }, [searchValue, suggestions.length]);
+
+  function handleSearchBarKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== "Enter") {
+      return;
+    }
+
+    if (suggestions.length !== 1) {
+      return;
+    }
+
+    const suggestion = suggestions[0];
+    const alreadyAdded = currencyRows.some((row) =>
+      row.code === suggestion.code
+    );
+
+    if (alreadyAdded) {
+      return;
+    }
+
+    // If only one result, add the only result
+    onAddRow(suggestions[0]);
+    onFinish();
+  }
 
   return (
     <>
@@ -100,6 +124,7 @@ export function AddCurrencyView(
           value={searchValue}
           onChange={(event: ChangeEvent<HTMLInputElement>) =>
             setSearchValue(event.target.value)}
+          onKeyDown={handleSearchBarKeyDown}
           startAdornment={
             <InputAdornment position="start">
               <SearchIcon />

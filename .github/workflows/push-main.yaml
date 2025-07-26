@@ -20,6 +20,7 @@ jobs:
     uses: ./.github/workflows/lint.yaml
 
   build:
+    name: Build application
     needs: lint
     runs-on: ubuntu-latest
     steps:
@@ -40,6 +41,7 @@ jobs:
           path: ./dist
 
   deploy:
+    name: Deploy to GitHub Pages
     needs: build
     runs-on: ubuntu-latest
     environment:
