@@ -15,6 +15,7 @@ export function useTheme(): Theme {
         },
         typography: {
           fontFamily: [
+            "IBM Plex Sans",
             "-apple-system",
             "BlinkMacSystemFont",
             '"Segoe UI"',

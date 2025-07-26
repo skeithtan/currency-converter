@@ -76,6 +76,7 @@ export function CurrencyDisplay({
         <Typography
           variant="h4"
           sx={{ px: 1, pt: 1 }}
+          fontWeight={600}
         >
           Currencies
         </Typography>

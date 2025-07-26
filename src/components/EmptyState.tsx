@@ -1,9 +1,11 @@
-import { Button, Grid, Typography } from "@mui/material";
+import { Button, Grid, Typography, useTheme } from "@mui/material";
 import SvgIcon from "@mui/material/SvgIcon";
 
 export function EmptyState(
   { icon: Icon, emptyText, buttonText, onButtonClick }: EmptyStateProps,
 ) {
+  const theme = useTheme();
+
   return (
     <Grid
       container
@@ -16,14 +18,18 @@ export function EmptyState(
       {Icon &&
         (
           <Grid>
-            <Icon fontSize="large" />
+            <Icon
+              fontSize="large"
+              sx={{ color: theme.palette.text.secondary }}
+            />
           </Grid>
         )}
 
-      <Grid>
+      <Grid size={{ xs: 10, sm: 8 }}>
         <Typography
           variant="h6"
           align="center"
+          color={theme.palette.text.secondary}
         >
           {emptyText}
         </Typography>

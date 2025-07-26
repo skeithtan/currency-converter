@@ -106,6 +106,7 @@ export function AddCurrencyView(
           <Typography
             variant="h4"
             sx={{ px: 1, pt: 1 }}
+            fontWeight={600}
           >
             Add currency
           </Typography>
@@ -149,8 +150,10 @@ export function AddCurrencyView(
 
         {suggestions.length === 0 && (
           <EmptyState
-            icon={EuroSymbolIcon}
-            emptyText="Type a currency code to see the search results"
+            icon={searchValue.length === 0 ? EuroSymbolIcon : undefined}
+            emptyText={searchValue.length === 0
+              ? "Type a currency code to see the search results"
+              : `No results for "${searchValue}"`}
           />
         )}
       </Box>
