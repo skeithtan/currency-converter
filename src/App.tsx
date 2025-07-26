@@ -137,6 +137,10 @@ export function App() {
                 overflow: "hidden",
                 background: theme.palette.background.paper,
               },
+
+              [theme.breakpoints.down("sm")]: {
+                boxShadow: "none",
+              },
             }}
           >
             {!isAddingCurrency &&
