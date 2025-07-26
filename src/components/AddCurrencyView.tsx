@@ -8,6 +8,7 @@ import {
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import { currencyData } from "country-currency-emoji-flags";
+import { countries } from "countries-list";
 import { CurrencyRowData } from "../types/CurrencyRowData.ts";
 import { SearchSuggestionRow } from "./SearchSuggestionRow.tsx";
 import currencyToSymbolMap from "currency-symbol-map/map";
@@ -55,6 +56,26 @@ export function AddCurrencyView(
         emoji: emoji as string,
         symbol: currencyToSymbolMap[code],
       }));
+
+    // Add search by country
+    for (const { name, currency: currencies } of Object.values(countries)) {
+      if (!name.toUpperCase().includes(searchTerm)) {
+        continue;
+      }
+
+      for (const currency of currencies) {
+        // Don't duplicate existing results
+        if (newSuggestions.some(({ code }) => code === currency)) {
+          continue;
+        }
+
+        newSuggestions.push({
+          code: currency,
+          emoji: currencyData[currency] as string,
+          symbol: currencyToSymbolMap[currency],
+        });
+      }
+    }
 
     setSearchSuggestions(newSuggestions);
   }, [searchValue, suggestions.length]);

@@ -24,6 +24,7 @@
     "@types/react": "npm:@types/react@^19.0.10",
     "@types/react-dom": "npm:@types/react-dom@^19.0.4",
     "@vitejs/plugin-react": "npm:@vitejs/plugin-react@^4.3.4",
+    "countries-list": "npm:countries-list@^3.1.1",
     "country-currency-emoji-flags": "npm:country-currency-emoji-flags@^1.1.1",
     "currency-symbol-map": "npm:currency-symbol-map@^5.1.0",
     "money": "npm:money@^0.2.0",
