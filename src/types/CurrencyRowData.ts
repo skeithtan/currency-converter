@@ -1,7 +1,7 @@
 export interface CurrencyRowData {
-    code: string;
-    emoji?: string;
-    symbol: string;
-    value?: string;
-    isLoading: boolean;
+  code: string;
+  emoji?: string;
+  symbol: string;
+  value?: string;
+  isLoading: boolean;
 }
