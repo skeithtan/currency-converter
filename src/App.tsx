@@ -135,7 +135,6 @@ export function App() {
                 flexDirection: "column",
                 justifyContent: "center",
                 overflow: "hidden",
-                background: theme.palette.background.paper,
               },
 
               [theme.breakpoints.down("sm")]: {

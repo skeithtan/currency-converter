@@ -10,7 +10,8 @@ export function useTheme(): Theme {
         palette: {
           mode: prefersDarkMode ? "dark" : "light",
           background: {
-            default: prefersDarkMode ? "#000000" : "#fff",
+            default: prefersDarkMode ? "#000" : "#fff",
+            ...!prefersDarkMode && { paper: "#f3f2f7" },
           },
         },
         typography: {
@@ -33,11 +34,7 @@ export function useTheme(): Theme {
   );
 
   useEffect(() => {
-    setMetaThemeColor(
-      prefersDarkMode
-        ? theme.palette.background.paper
-        : theme.palette.background.default,
-    );
+    setMetaThemeColor(theme.palette.background.paper);
   }, [prefersDarkMode, theme.palette.background.default]);
 
   return theme;

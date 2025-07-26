@@ -107,11 +107,12 @@ export function AddCurrencyView(
     <>
       <Box
         sx={{
+          background: theme.palette.background.paper,
+
           [theme.breakpoints.down("sm")]: {
             position: "sticky",
             top: 0,
             zIndex: 1000,
-            background: theme.palette.background.paper,
           },
         }}
       >
