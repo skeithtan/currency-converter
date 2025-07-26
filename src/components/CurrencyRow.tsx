@@ -7,7 +7,7 @@ import {
   Skeleton,
   Typography,
 } from "@mui/material";
-import { useRef, useState } from "react";
+import { ChangeEvent, KeyboardEvent, useRef, useState } from "react";
 import { RemoveCircleOutline } from "@mui/icons-material";
 import { focusAndOpenKeyboard } from "../utils/focusAndOpenKeyboard.ts";
 
@@ -122,8 +122,9 @@ export function CurrencyRow({
               inputProps={{ inputMode: "decimal" }}
               inputRef={inputRef}
               value={inputValue}
-              onChange={(event) => setInputValue(event.target.value)}
-              onKeyDown={(event) => {
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                setInputValue(event.target.value)}
+              onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
                 if (event.key === "Enter") {
                   endUpdatingValue();
                 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Container, Paper, ThemeProvider } from "@mui/material";
+import { Theme } from "@mui/material/styles";
 import { useTheme } from "./theme.ts";
 import { CurrencyDisplay } from "./components/CurrencyDisplay.tsx";
 import { AddCurrencyView } from "./components/AddCurrencyView.tsx";
@@ -110,7 +111,7 @@ export function App() {
       >
         <Container
           maxWidth="sm"
-          sx={(theme) => ({
+          sx={(theme: Theme) => ({
             p: 0,
 
             [theme.breakpoints.up("sm")]: {

@@ -5,7 +5,7 @@ import {
   InputBase,
   Typography,
 } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import { currencyData } from "country-currency-emoji-flags";
 import { CurrencyRowData } from "../types/CurrencyRowData.ts";
@@ -87,7 +87,8 @@ export function AddCurrencyView(
         inputRef={inputRef}
         placeholder="Search currency codes"
         value={searchValue}
-        onChange={(event) => setSearchValue(event.target.value)}
+        onChange={(event: ChangeEvent<HTMLInputElement>) =>
+          setSearchValue(event.target.value)}
         startAdornment={
           <InputAdornment position="start">
             <SearchIcon />
