@@ -33,13 +33,17 @@ export function useTheme(): Theme {
   );
 
   useEffect(() => {
-    setNewThemeColor(theme.palette.background.default);
+    setMetaThemeColor(
+      prefersDarkMode
+        ? theme.palette.background.paper
+        : theme.palette.background.default,
+    );
   }, [prefersDarkMode, theme.palette.background.default]);
 
   return theme;
 }
 
-function setNewThemeColor(newThemeColor: string) {
+function setMetaThemeColor(newThemeColor: string) {
   const metaThemeColor = document.querySelector('meta[name="theme-color"]');
   if (metaThemeColor) {
     metaThemeColor.setAttribute("content", newThemeColor);
