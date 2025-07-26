@@ -69,7 +69,7 @@ export function CurrencyRow({
         justifyContent="space-between"
         alignItems="center"
       >
-        <Grid item>
+        <Grid>
           <Typography
             variant="h6"
             mr={3}
@@ -79,10 +79,7 @@ export function CurrencyRow({
         </Grid>
 
         {isLoading && (
-          <Grid
-            item
-            xs
-          >
+          <Grid size={{ xs: 6 }}>
             <Skeleton
               variant="text"
               sx={{ fontSize: "2rem" }}
@@ -91,7 +88,7 @@ export function CurrencyRow({
         )}
 
         {isEditing && (
-          <Grid item>
+          <Grid>
             <IconButton
               color="error"
               onClick={onRemove}
@@ -102,10 +99,7 @@ export function CurrencyRow({
         )}
 
         {!isLoading && !isEditing && (
-          <Grid
-            item
-            xs
-          >
+          <Grid size={{ xs: 8 }}>
             {!isUpdatingValue && (
               <Typography
                 variant="h5"

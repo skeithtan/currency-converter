@@ -17,14 +17,14 @@ export function SearchSuggestionRow(
         justifyContent="space-between"
         alignItems="center"
       >
-        <Grid item>
+        <Grid>
           <ListItemText
             primary={`${emoji ?? "💰"} ${code}`}
             secondary={alreadyAdded ? "Already added" : undefined}
           />
         </Grid>
 
-        <Grid item>
+        <Grid>
           <Typography variant="subtitle1">{symbol}</Typography>
         </Grid>
       </Grid>

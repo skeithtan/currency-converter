@@ -38,7 +38,7 @@ export function CurrencyDisplay({
           justifyContent="space-between"
         >
           {!isEditing && (
-            <Grid item>
+            <Grid>
               <Button
                 disabled={currencyRows.length === 0}
                 onClick={() => setIsEditing(true)}
@@ -49,7 +49,7 @@ export function CurrencyDisplay({
           )}
 
           {!isEditing && (
-            <Grid item>
+            <Grid>
               <Button
                 endIcon={<AddIcon />}
                 onClick={onAddCurrencyClick}
@@ -60,7 +60,7 @@ export function CurrencyDisplay({
           )}
 
           {isEditing && (
-            <Grid item>
+            <Grid>
               <Button onClick={() => setIsEditing(false)}>Done</Button>
             </Grid>
           )}

@@ -1,5 +1,5 @@
 import { Button, Grid, Typography } from "@mui/material";
-import SvgIcon from "@mui/material/SvgIcon/SvgIcon";
+import SvgIcon from "@mui/material/SvgIcon";
 
 export function EmptyState(
   { icon: Icon, emptyText, buttonText, onButtonClick }: EmptyStateProps,
@@ -15,12 +15,12 @@ export function EmptyState(
     >
       {Icon &&
         (
-          <Grid item>
+          <Grid>
             <Icon fontSize="large" />
           </Grid>
         )}
 
-      <Grid item>
+      <Grid>
         <Typography
           variant="h6"
           align="center"
@@ -31,7 +31,7 @@ export function EmptyState(
 
       {buttonText &&
         (
-          <Grid item>
+          <Grid>
             <Button onClick={onButtonClick}>Add a currency</Button>
           </Grid>
         )}
