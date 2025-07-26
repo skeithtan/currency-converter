@@ -62,39 +62,51 @@ export function AddCurrencyView(
     <>
       <Box
         sx={{
-          px: 1,
-          py: 2,
-          borderBottom: "1px solid",
-          borderColor: theme.palette.divider,
+          [theme.breakpoints.down("sm")]: {
+            position: "sticky",
+            top: 0,
+            zIndex: 1000,
+            background: theme.palette.background.paper,
+          },
         }}
       >
-        <Button onClick={handleFinish}>Cancel</Button>
-        <Typography
-          variant="h4"
-          sx={{ px: 1, pt: 1 }}
+        <Box
+          sx={{
+            px: 1,
+            py: 2,
+            borderBottom: "1px solid",
+            borderColor: theme.palette.divider,
+          }}
         >
-          Add currency
-        </Typography>
+          <Button onClick={handleFinish}>Cancel</Button>
+          <Typography
+            variant="h4"
+            sx={{ px: 1, pt: 1 }}
+          >
+            Add currency
+          </Typography>
+        </Box>
+        <InputBase
+          sx={{
+            p: 1,
+            pl: 2,
+            flex: 1,
+            width: "100%",
+            borderBottom: "1px solid",
+            borderColor: theme.palette.divider,
+          }}
+          inputRef={inputRef}
+          placeholder="Search currency codes"
+          value={searchValue}
+          onChange={(event: ChangeEvent<HTMLInputElement>) =>
+            setSearchValue(event.target.value)}
+          startAdornment={
+            <InputAdornment position="start">
+              <SearchIcon />
+            </InputAdornment>
+          }
+        />
       </Box>
-      <InputBase
-        sx={{
-          p: 1,
-          pl: 2,
-          flex: 1,
-          borderBottom: "1px solid",
-          borderColor: theme.palette.divider,
-        }}
-        inputRef={inputRef}
-        placeholder="Search currency codes"
-        value={searchValue}
-        onChange={(event: ChangeEvent<HTMLInputElement>) =>
-          setSearchValue(event.target.value)}
-        startAdornment={
-          <InputAdornment position="start">
-            <SearchIcon />
-          </InputAdornment>
-        }
-      />
       <Box sx={{ overflow: "auto" }}>
         {suggestions.map((suggestion) => (
           <SearchSuggestionRow

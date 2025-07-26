@@ -30,6 +30,13 @@ export function CurrencyDisplay({
           py: 2,
           borderBottom: "1px solid",
           borderColor: theme.palette.divider,
+
+          [theme.breakpoints.down("sm")]: {
+            position: "sticky",
+            top: 0,
+            zIndex: 1000,
+            background: theme.palette.background.paper,
+          },
         }}
       >
         <Grid
