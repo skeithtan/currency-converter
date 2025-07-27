@@ -39,6 +39,7 @@ export function useTheme(): Theme {
             styleOverrides: {
               root: {
                 textTransform: "none",
+                fontSize: "1rem",
               },
             },
           },
