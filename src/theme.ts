@@ -48,8 +48,8 @@ export function useTheme(): Theme {
   );
 
   useEffect(() => {
-    setMetaThemeColor(theme.palette.background.paper);
-  }, [prefersDarkMode, theme.palette.background.default]);
+    setMetaThemeColor(theme.palette.primary.main);
+  }, [prefersDarkMode, theme.palette.primary.main]);
 
   return theme;
 }
