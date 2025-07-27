@@ -3,12 +3,12 @@ import {
   Button,
   InputAdornment,
   InputBase,
+  LinearProgress,
   Typography,
 } from "@mui/material";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import { currencyData } from "country-currency-emoji-flags";
-import { countries } from "countries-list";
 import { CurrencyRowData } from "../types/CurrencyRowData.ts";
 import { SearchSuggestionRow } from "./SearchSuggestionRow.tsx";
 import currencyToSymbolMap from "currency-symbol-map/map";
@@ -18,6 +18,8 @@ import EuroSymbolIcon from "@mui/icons-material/EuroSymbol";
 import { EmptyState } from "./EmptyState.tsx";
 import { useTheme } from "../theme.ts";
 import { KeyboardEvent } from "npm:@types/react@19.1.8";
+import { CurrencyRecord } from "../types/Conversion.ts";
+import { loadCurrencies } from "../utils/loadCurrencies.ts";
 
 export function AddCurrencyView(
   { onFinish, onAddRow, currencyRows }: AddCurrencyViewProps,
@@ -25,6 +27,11 @@ export function AddCurrencyView(
   const [searchValue, setSearchValue] = useState("");
   const [suggestions, setSearchSuggestions] = useState<SearchSuggestionData[]>(
     [],
+  );
+  const [currencyRecords, setCurrencyRecords] = useState<
+    CurrencyRecord | undefined
+  >(
+    undefined,
   );
   const inputRef = useRef<HTMLInputElement>(undefined);
   const theme = useTheme();
@@ -41,44 +48,38 @@ export function AddCurrencyView(
   }, []);
 
   useEffect(() => {
-    const searchTerm = searchValue.trim().toUpperCase();
-    if (searchTerm.length === 0) {
-      if (suggestions.length > 0) {
-        setSearchSuggestions([]);
-      }
+    loadCurrencies()
+      .then((data) => setCurrencyRecords(data));
+  }, []);
 
+  useEffect(() => {
+    if (!currencyRecords) {
+      setSearchSuggestions([]);
       return;
     }
 
-    const newSuggestions: SearchSuggestionData[] = Object.entries(currencyData)
-      .filter(([code]) => code.startsWith(searchTerm)).map(([code, emoji]) => ({
-        code,
-        emoji: emoji as string,
-        symbol: currencyToSymbolMap[code],
-      }));
-
-    // Add search by country
-    for (const { name, currency: currencies } of Object.values(countries)) {
-      if (!name.toUpperCase().includes(searchTerm)) {
-        continue;
-      }
-
-      for (const currency of currencies) {
-        // Don't duplicate existing results
-        if (newSuggestions.some(({ code }) => code === currency)) {
-          continue;
-        }
-
-        newSuggestions.push({
-          code: currency,
-          emoji: currencyData[currency] as string,
-          symbol: currencyToSymbolMap[currency],
-        });
-      }
+    const searchTerm = searchValue.trim().toUpperCase();
+    if (searchTerm.length === 0) {
+      setSearchSuggestions([]);
+      return;
     }
 
+    const newSuggestions: SearchSuggestionData[] = Object.entries(
+      currencyRecords,
+    )
+      .filter(([code, name]) =>
+        code.toUpperCase().includes(searchTerm) ||
+        name.toUpperCase().includes(searchTerm)
+      )
+      .map(([code, name]) => ({
+        code,
+        emoji: currencyData[code] as string,
+        symbol: currencyToSymbolMap[code],
+        name,
+      }));
+
     setSearchSuggestions(newSuggestions);
-  }, [searchValue, suggestions.length]);
+  }, [searchValue, currencyRecords]);
 
   function handleSearchBarKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key !== "Enter") {
@@ -107,7 +108,8 @@ export function AddCurrencyView(
     <>
       <Box
         sx={{
-          background: theme.palette.background.paper,
+          background: theme.palette.primary.main,
+          color: theme.palette.primary.light,
 
           [theme.breakpoints.down("sm")]: {
             position: "sticky",
@@ -124,10 +126,10 @@ export function AddCurrencyView(
             borderColor: theme.palette.divider,
           }}
         >
-          <Button onClick={handleFinish}>Cancel</Button>
+          <Button onClick={handleFinish} color="inherit">Cancel</Button>
           <Typography
             variant="h4"
-            sx={{ px: 1, pt: 1 }}
+            sx={{ px: 1, color: theme.palette.primary.contrastText }}
             fontWeight={600}
           >
             Add currency
@@ -141,6 +143,8 @@ export function AddCurrencyView(
             width: "100%",
             borderBottom: "1px solid",
             borderColor: theme.palette.divider,
+            background: theme.palette.primary.dark,
+            color: theme.palette.primary.contrastText,
           }}
           inputRef={inputRef}
           placeholder="Search currency codes"
@@ -150,10 +154,11 @@ export function AddCurrencyView(
           onKeyDown={handleSearchBarKeyDown}
           startAdornment={
             <InputAdornment position="start">
-              <SearchIcon />
+              <SearchIcon sx={{ color: theme.palette.primary.light }} />
             </InputAdornment>
           }
         />
+        {currencyRecords == null && <LinearProgress />}
       </Box>
       <Box sx={{ overflow: "auto" }}>
         {suggestions.map((suggestion) => (
@@ -172,7 +177,7 @@ export function AddCurrencyView(
 
         {suggestions.length === 0 && (
           <EmptyState
-            icon={searchValue.length === 0 ? EuroSymbolIcon : undefined}
+            icon={searchValue.length === 0 ? EuroSymbolIcon : SearchIcon}
             emptyText={searchValue.length === 0
               ? "Type a currency code to see the search results"
               : `No results for "${searchValue}"`}

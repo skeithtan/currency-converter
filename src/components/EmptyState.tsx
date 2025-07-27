@@ -10,7 +10,7 @@ export function EmptyState(
     <Grid
       container
       direction="column"
-      sx={{ p: 8 }}
+      sx={{ p: 7 }}
       spacing={2}
       alignItems="center"
       justifyContent="center"
@@ -38,7 +38,9 @@ export function EmptyState(
       {buttonText &&
         (
           <Grid>
-            <Button onClick={onButtonClick}>Add a currency</Button>
+            <Button onClick={onButtonClick} variant="outlined">
+              Add a currency
+            </Button>
           </Grid>
         )}
     </Grid>

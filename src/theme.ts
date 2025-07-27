@@ -9,6 +9,11 @@ export function useTheme(): Theme {
       createTheme({
         palette: {
           mode: prefersDarkMode ? "dark" : "light",
+          primary: {
+            light: "#d0e6dd",
+            main: "#178459",
+            dark: "#105c3e",
+          },
           background: {
             default: prefersDarkMode ? "#000" : "#fff",
             ...!prefersDarkMode && { paper: "#f3f2f7" },
@@ -28,6 +33,15 @@ export function useTheme(): Theme {
             '"Segoe UI Emoji"',
             '"Segoe UI Symbol"',
           ].join(","),
+        },
+        components: {
+          MuiButton: {
+            styleOverrides: {
+              root: {
+                textTransform: "none",
+              },
+            },
+          },
         },
       }),
     [prefersDarkMode],

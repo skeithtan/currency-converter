@@ -7,7 +7,7 @@ import { EmptyState } from "./EmptyState.tsx";
 import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
 import { useTheme } from "../theme.ts";
 
-export function CurrencyDisplay({
+export function CurrenciesHeader({
   onAddCurrencyClick,
   currencyRows,
   onRowValueChange,
@@ -30,7 +30,8 @@ export function CurrencyDisplay({
           py: 2,
           borderBottom: "1px solid",
           borderColor: theme.palette.divider,
-          background: theme.palette.background.paper,
+          background: theme.palette.primary.main,
+          color: theme.palette.primary.light,
 
           [theme.breakpoints.down("sm")]: {
             position: "sticky",
@@ -49,6 +50,7 @@ export function CurrencyDisplay({
               <Button
                 disabled={currencyRows.length === 0}
                 onClick={() => setIsEditing(true)}
+                color="inherit"
               >
                 Modify
               </Button>
@@ -60,6 +62,7 @@ export function CurrencyDisplay({
               <Button
                 endIcon={<AddIcon />}
                 onClick={onAddCurrencyClick}
+                color="inherit"
               >
                 Add
               </Button>
@@ -68,15 +71,18 @@ export function CurrencyDisplay({
 
           {isEditing && (
             <Grid>
-              <Button onClick={() => setIsEditing(false)}>Done</Button>
+              <Button color="inherit" onClick={() => setIsEditing(false)}>
+                Done
+              </Button>
             </Grid>
           )}
         </Grid>
 
         <Typography
           variant="h4"
-          sx={{ px: 1, pt: 1 }}
+          sx={{ px: 1 }}
           fontWeight={600}
+          color={theme.palette.primary.contrastText}
         >
           Currencies
         </Typography>

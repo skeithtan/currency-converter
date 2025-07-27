@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { Container, Paper, ThemeProvider } from "@mui/material";
 import { Theme } from "@mui/material/styles";
 import { useTheme } from "./theme.ts";
-import { CurrencyDisplay } from "./components/CurrencyDisplay.tsx";
+import { CurrenciesHeader } from "./components/CurrenciesHeader.tsx";
 import { AddCurrencyView } from "./components/AddCurrencyView.tsx";
 import { CurrencyRowData } from "./types/CurrencyRowData.ts";
-import { fetchConversion } from "./utils/fetchConversion.ts";
+import { loadConversionRates } from "./utils/loadConversionRates.ts";
 import fx from "money";
 import { SearchSuggestionData } from "./types/SearchSuggestionData.ts";
 
@@ -50,7 +50,7 @@ export function App() {
     }
 
     const baseRow = currencyRows[0];
-    await fetchConversion();
+    await loadConversionRates();
 
     const value = Number(
       fx.convert(parseFloat(baseRow.value?.toString() ?? "0"), {
@@ -78,7 +78,7 @@ export function App() {
       })
     );
 
-    await fetchConversion();
+    await loadConversionRates();
 
     setCurrencyRows((currencyRows) =>
       currencyRows.map((r) => {
@@ -144,7 +144,7 @@ export function App() {
           >
             {!isAddingCurrency &&
               (
-                <CurrencyDisplay
+                <CurrenciesHeader
                   onAddCurrencyClick={() => setIsAddingCurrency(true)}
                   currencyRows={currencyRows}
                   onRowValueChange={handleRowValueChange}

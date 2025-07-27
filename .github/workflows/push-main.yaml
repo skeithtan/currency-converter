@@ -34,6 +34,8 @@ jobs:
 
       - name: Build app
         run: deno task build
+        env:
+          OPEN_EXCHANGE_APP_ID: ${{ secrets.OPEN_EXCHANGE_APP_ID }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
