@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Container, Paper, ThemeProvider } from "@mui/material";
 import { Theme } from "@mui/material/styles";
 import { useTheme } from "./theme.ts";
-import { CurrenciesHeader } from "./components/CurrenciesHeader.tsx";
+import { CurrencyList } from "./components/CurrencyList.tsx";
 import { AddCurrencyView } from "./components/AddCurrencyView.tsx";
 import { CurrencyRowData } from "./types/CurrencyRowData.ts";
 import { loadConversionRates } from "./utils/loadConversionRates.ts";
@@ -144,11 +144,12 @@ export function App() {
           >
             {!isAddingCurrency &&
               (
-                <CurrenciesHeader
-                  onAddCurrencyClick={() => setIsAddingCurrency(true)}
+                <CurrencyList
                   currencyRows={currencyRows}
+                  onAddCurrencyClick={() => setIsAddingCurrency(true)}
                   onRowValueChange={handleRowValueChange}
                   onRemoveRow={handleRemoveRow}
+                  onReorder={setCurrencyRows}
                 />
               )}
 

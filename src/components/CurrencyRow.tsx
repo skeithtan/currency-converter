@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { ChangeEvent, KeyboardEvent, useRef, useState } from "react";
 import { RemoveCircleOutline } from "@mui/icons-material";
+import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import { focusAndOpenKeyboard } from "../utils/focusAndOpenKeyboard.ts";
 
 export function CurrencyRow({
@@ -62,14 +63,19 @@ export function CurrencyRow({
       sx={{ minHeight: 72 }}
       disabled={isLoading}
       divider
+      disableRipple={isEditing}
     >
       <Grid
         container
         width="100%"
         justifyContent="space-between"
         alignItems="center"
+        wrap="nowrap"
       >
-        <Grid>
+        <Grid container spacing={2} alignItems="center">
+          {isEditing && (
+            <DragIndicatorIcon color="action" sx={{ cursor: "grab" }} />
+          )}
           <Typography
             variant="h6"
             mr={3}

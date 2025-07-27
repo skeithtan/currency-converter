@@ -19,6 +19,7 @@
     "@deno/vite-plugin": "npm:@deno/vite-plugin@^1.0.4",
     "@emotion/react": "npm:@emotion/react@^11.14.0",
     "@emotion/styled": "npm:@emotion/styled@^11.14.1",
+    "@hello-pangea/dnd": "npm:@hello-pangea/dnd@^18.0.1",
     "@mui/icons-material": "npm:@mui/icons-material@^7.2.0",
     "@mui/material": "npm:@mui/material@^7.2.0",
     "@types/react": "npm:@types/react@^19.0.10",
