@@ -120,7 +120,7 @@ export function CurrencyRow({
               opacity: isEditing ? 1 : 0,
               overflow: "hidden",
               flexShrink: 0,
-              transition: "width 0.3s ease, opacity 0.3s ease",
+              transition: "width 0.15s ease, opacity 0.15s ease",
             }}
           >
             <DragIndicatorIcon color="action" sx={{ cursor: "grab" }} />
