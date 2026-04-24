@@ -1,4 +1,6 @@
 import {
+  Box,
+  Fade,
   Grid,
   IconButton,
   InputAdornment,
@@ -60,7 +62,7 @@ export function CurrencyRow({
   return (
     <ListItemButton
       onClick={handleClick}
-      sx={{ minHeight: 72 }}
+      sx={{ minHeight: 72, position: "relative" }}
       disabled={isLoading}
       divider
       disableRipple={isEditing}
@@ -74,13 +76,26 @@ export function CurrencyRow({
           flexWrap: "nowrap",
         }}
       >
-        <Grid container spacing={2} sx={{ alignItems: "center" }}>
-          {isEditing && (
+        <Grid
+          container
+          sx={{ alignItems: "center", flexWrap: "nowrap" }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              width: isEditing ? 32 : 0,
+              opacity: isEditing ? 1 : 0,
+              overflow: "hidden",
+              flexShrink: 0,
+              transition: "width 0.3s ease, opacity 0.3s ease",
+            }}
+          >
             <DragIndicatorIcon color="action" sx={{ cursor: "grab" }} />
-          )}
+          </Box>
           <Typography
             variant="h6"
-            sx={{ mr: 3 }}
+            sx={{ mr: 3, whiteSpace: "nowrap" }}
           >
             {emoji ?? "💰"} {code}
           </Typography>
@@ -95,18 +110,17 @@ export function CurrencyRow({
           </Grid>
         )}
 
-        {isEditing && (
-          <Grid>
-            <IconButton
-              color="error"
-              onClick={onRemove}
-            >
-              <RemoveCircleOutlined />
-            </IconButton>
-          </Grid>
-        )}
+        <Fade in={isEditing} unmountOnExit>
+          <IconButton
+            color="error"
+            onClick={onRemove}
+            sx={{ position: "absolute", right: 16 }}
+          >
+            <RemoveCircleOutlined />
+          </IconButton>
+        </Fade>
 
-        {!isLoading && !isEditing && (
+        <Fade in={!isLoading && !isEditing} unmountOnExit>
           <Grid size={{ xs: 8 }}>
             {!isUpdatingValue && (
               <Typography
@@ -137,7 +151,7 @@ export function CurrencyRow({
               }
             />
           </Grid>
-        )}
+        </Fade>
       </Grid>
     </ListItemButton>
   );

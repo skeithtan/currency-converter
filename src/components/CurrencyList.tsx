@@ -121,64 +121,47 @@ export function CurrencyList({
         </Typography>
       </Box>
       <Box sx={{ overflow: "auto" }}>
-        {isEditing
-          ? (
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="currency-list">
-                {(provided) => (
-                  <div ref={provided.innerRef} {...provided.droppableProps}>
-                    {currencyRows.map((row, index) => (
-                      <Draggable
-                        key={row.code}
-                        draggableId={row.code}
-                        index={index}
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="currency-list">
+            {(provided) => (
+              <div ref={provided.innerRef} {...provided.droppableProps}>
+                {currencyRows.map((row, index) => (
+                  <Draggable
+                    key={row.code}
+                    draggableId={row.code}
+                    index={index}
+                    isDragDisabled={!isEditing}
+                  >
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        style={{
+                          ...provided.draggableProps.style,
+                          opacity: snapshot.isDragging ? 0.7 : 1,
+                        }}
                       >
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            style={{
-                              ...provided.draggableProps.style,
-                              opacity: snapshot.isDragging ? 0.7 : 1,
-                            }}
-                          >
-                            <CurrencyRow
-                              code={row.code}
-                              emoji={row.emoji}
-                              symbol={row.symbol}
-                              value={row.value}
-                              isLoading={row.isLoading}
-                              isEditing={isEditing}
-                              onValueChange={(newValue) =>
-                                onRowValueChange(row, newValue)}
-                              onRemove={() => onRemoveRow(row)}
-                            />
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          )
-          : (
-            currencyRows.map((row) => (
-              <CurrencyRow
-                key={row.code}
-                code={row.code}
-                emoji={row.emoji}
-                symbol={row.symbol}
-                value={row.value}
-                isLoading={row.isLoading}
-                isEditing={isEditing}
-                onValueChange={(newValue) => onRowValueChange(row, newValue)}
-                onRemove={() => onRemoveRow(row)}
-              />
-            ))
-          )}
+                        <CurrencyRow
+                          code={row.code}
+                          emoji={row.emoji}
+                          symbol={row.symbol}
+                          value={row.value}
+                          isLoading={row.isLoading}
+                          isEditing={isEditing}
+                          onValueChange={(newValue) =>
+                            onRowValueChange(row, newValue)}
+                          onRemove={() => onRemoveRow(row)}
+                        />
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
         {currencyRows.length === 0 && (
           <EmptyState
             icon={CurrencyExchangeIcon}
