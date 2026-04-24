@@ -62,8 +62,7 @@ export function CurrencyList({
       >
         <Grid
           container
-          alignItems="center"
-          justifyContent="space-between"
+          sx={{ alignItems: "center", justifyContent: "space-between" }}
         >
           {!isEditing && (
             <Grid>
@@ -100,9 +99,11 @@ export function CurrencyList({
 
         <Typography
           variant="h4"
-          sx={{ px: 1 }}
-          fontWeight={600}
-          color={theme.palette.primary.contrastText}
+          sx={{
+            px: 1,
+            fontWeight: 600,
+            color: theme.palette.primary.contrastText,
+          }}
         >
           Currencies
         </Typography>

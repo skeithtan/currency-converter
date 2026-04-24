@@ -8,7 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import { ChangeEvent, KeyboardEvent, useRef, useState } from "react";
-import { RemoveCircleOutline } from "@mui/icons-material";
+import { RemoveCircleOutlined } from "@mui/icons-material";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import { focusAndOpenKeyboard } from "../utils/focusAndOpenKeyboard.ts";
 
@@ -67,18 +67,20 @@ export function CurrencyRow({
     >
       <Grid
         container
-        width="100%"
-        justifyContent="space-between"
-        alignItems="center"
-        wrap="nowrap"
+        sx={{
+          width: "100%",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "nowrap",
+        }}
       >
-        <Grid container spacing={2} alignItems="center">
+        <Grid container spacing={2} sx={{ alignItems: "center" }}>
           {isEditing && (
             <DragIndicatorIcon color="action" sx={{ cursor: "grab" }} />
           )}
           <Typography
             variant="h6"
-            mr={3}
+            sx={{ mr: 3 }}
           >
             {emoji ?? "💰"} {code}
           </Typography>
@@ -99,7 +101,7 @@ export function CurrencyRow({
               color="error"
               onClick={onRemove}
             >
-              <RemoveCircleOutline />
+              <RemoveCircleOutlined />
             </IconButton>
           </Grid>
         )}
@@ -119,7 +121,7 @@ export function CurrencyRow({
               fullWidth
               type="number"
               sx={{ ...(isUpdatingValue ? {} : { display: "none" }) }}
-              inputProps={{ inputMode: "decimal" }}
+              slotProps={{ input: { inputMode: "decimal" } }}
               inputRef={inputRef}
               value={inputValue}
               onChange={(event: ChangeEvent<HTMLInputElement>) =>

@@ -13,9 +13,11 @@ export function SearchSuggestionRow(
     >
       <Grid
         container
-        width="100%"
-        justifyContent="space-between"
-        alignItems="center"
+        sx={{
+          width: "100%",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
       >
         <Grid>
           <ListItemText

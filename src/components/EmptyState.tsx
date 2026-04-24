@@ -9,11 +9,13 @@ export function EmptyState(
   return (
     <Grid
       container
-      direction="column"
-      sx={{ p: 7 }}
       spacing={2}
-      alignItems="center"
-      justifyContent="center"
+      sx={{
+        p: 7,
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
     >
       {Icon &&
         (

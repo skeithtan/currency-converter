@@ -130,8 +130,11 @@ export function AddCurrencyView(
           <Button onClick={handleFinish} color="inherit">Cancel</Button>
           <Typography
             variant="h4"
-            sx={{ px: 1, color: theme.palette.primary.contrastText }}
-            fontWeight={600}
+            sx={{
+              px: 1,
+              color: theme.palette.primary.contrastText,
+              fontWeight: 600,
+            }}
           >
             Add currency
           </Typography>
