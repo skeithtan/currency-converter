@@ -25,6 +25,7 @@ export function CurrencyRow({
   onRemove,
 }: CurrencyRowProps) {
   const inputRef = useRef<HTMLInputElement>(undefined);
+  const rowRef = useRef<HTMLDivElement>(undefined);
   const [isUpdatingValue, setIsUpdatingValue] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const formatter = new Intl.NumberFormat(undefined, {
@@ -37,6 +38,14 @@ export function CurrencyRow({
     ? formatter.format(parseFloat(value))
     : undefined;
 
+  function findScrollParent(el: HTMLElement | null): HTMLElement | null {
+    let parent = el?.parentElement ?? null;
+    while (parent && parent.scrollHeight <= parent.clientHeight) {
+      parent = parent.parentElement;
+    }
+    return parent;
+  }
+
   function handleClick() {
     if (isLoading || isEditing) {
       return;
@@ -45,11 +54,33 @@ export function CurrencyRow({
     setIsUpdatingValue(true);
     if (inputRef.current) {
       focusAndOpenKeyboard(inputRef.current);
+      const row = rowRef.current;
+      if (row) {
+        const scrollParent = findScrollParent(row);
+        if (scrollParent) {
+          const halfHeight = scrollParent.clientHeight / 2;
+          scrollParent.style.paddingBottom = `${halfHeight}px`;
+          const rowRect = row.getBoundingClientRect();
+          const containerRect = scrollParent.getBoundingClientRect();
+          const rowTop = rowRect.top - containerRect.top +
+            scrollParent.scrollTop;
+          const targetScroll = rowTop - scrollParent.clientHeight / 3;
+          scrollParent.scrollTo({
+            top: Math.max(0, targetScroll),
+            behavior: "smooth",
+          });
+        }
+      }
     }
   }
 
   function endUpdatingValue() {
     setIsUpdatingValue(false);
+    // Remove the extra padding added for centering
+    const scrollParent = findScrollParent(rowRef.current);
+    if (scrollParent) {
+      scrollParent.style.paddingBottom = "";
+    }
     const newValue = inputRef.current?.valueAsNumber;
     if (newValue == null) {
       return;
@@ -61,6 +92,7 @@ export function CurrencyRow({
 
   return (
     <ListItemButton
+      ref={rowRef}
       onClick={handleClick}
       sx={{ minHeight: 72, position: "relative" }}
       disabled={isLoading}

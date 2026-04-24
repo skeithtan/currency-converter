@@ -4,8 +4,6 @@
  */
 export function focusAndOpenKeyboard(element: HTMLInputElement) {
   const timeout = 100;
-  // Align temp input element approximately where the input element is
-  // so the cursor doesn't jump around
   const __tempEl__ = document.createElement("input");
   __tempEl__.style.position = "absolute";
   __tempEl__.style.top = element.offsetTop + 7 + "px";
@@ -14,14 +12,11 @@ export function focusAndOpenKeyboard(element: HTMLInputElement) {
   __tempEl__.style.opacity = "0";
   __tempEl__.type = "number";
   __tempEl__.inputMode = "decimal";
-  // Put this temp element as a child of the page <body> and focus on it
   document.body.appendChild(__tempEl__);
-  __tempEl__.focus();
+  __tempEl__.focus({ preventScroll: true });
 
-  // The keyboard is open. Now do a delayed focus on the target element
   setTimeout(function () {
-    element.focus();
-    // Remove the temp element
-    document.body.removeChild(__tempEl__);
+    element.focus({ preventScroll: true });
+    __tempEl__.remove();
   }, timeout);
 }
