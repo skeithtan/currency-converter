@@ -35,6 +35,13 @@ export function useTheme(): Theme {
           ].join(","),
         },
         components: {
+          MuiCssBaseline: {
+            styleOverrides: {
+              body: {
+                backgroundColor: "#178459",
+              },
+            },
+          },
           MuiButton: {
             styleOverrides: {
               root: {
