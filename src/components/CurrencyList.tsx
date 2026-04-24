@@ -52,12 +52,7 @@ export function CurrencyList({
           borderColor: theme.palette.divider,
           background: theme.palette.primary.main,
           color: theme.palette.primary.light,
-
-          [theme.breakpoints.down("sm")]: {
-            position: "sticky",
-            top: 0,
-            zIndex: 1000,
-          },
+          flexShrink: 0,
         }}
       >
         <Box sx={{ position: "relative", minHeight: 40 }}>
@@ -120,7 +115,7 @@ export function CurrencyList({
           Currencies
         </Typography>
       </Box>
-      <Box sx={{ overflow: "auto" }}>
+      <Box sx={{ overflow: "auto", flex: 1, WebkitOverflowScrolling: "touch" }}>
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="currency-list">
             {(provided) => (

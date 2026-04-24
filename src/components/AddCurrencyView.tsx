@@ -110,12 +110,7 @@ export function AddCurrencyView(
         sx={{
           background: theme.palette.primary.main,
           color: theme.palette.primary.light,
-
-          [theme.breakpoints.down("sm")]: {
-            position: "sticky",
-            top: 0,
-            zIndex: 1000,
-          },
+          flexShrink: 0,
         }}
       >
         <Box
@@ -164,7 +159,7 @@ export function AddCurrencyView(
         />
         {currencyRecords == null && <LinearProgress />}
       </Box>
-      <Box sx={{ overflow: "auto" }}>
+      <Box sx={{ overflow: "auto", flex: 1, WebkitOverflowScrolling: "touch" }}>
         {suggestions.map((suggestion) => (
           <SearchSuggestionRow
             key={suggestion.code}

@@ -105,40 +105,41 @@ export function App() {
         sx={{
           background: theme.palette.background.default,
           padding: 0,
-          minHeight: "100vh",
-          minWidth: "100vw",
+          height: "100vh",
+          width: "100vw",
+          overflow: "hidden",
+          position: "fixed",
+          top: 0,
+          left: 0,
         }}
       >
         <Container
           maxWidth="sm"
           sx={(theme: Theme) => ({
             p: 0,
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
 
             [theme.breakpoints.up("sm")]: {
-              height: "100vh",
-              display: "flex",
-              flexDirection: "column",
               justifyContent: "center",
             },
           })}
         >
           <Paper
             sx={{
-              my: "auto",
               display: "flex",
               flexDirection: "column",
               background: theme.palette.background.default,
+              overflow: "hidden",
 
               [theme.breakpoints.up("sm")]: {
                 maxHeight: "90vh",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                overflow: "hidden",
               },
 
               [theme.breakpoints.down("sm")]: {
                 boxShadow: "none",
+                flex: 1,
               },
             }}
           >
