@@ -122,7 +122,9 @@ export function AddCurrencyView(
             borderColor: theme.palette.divider,
           }}
         >
-          <Button onClick={handleFinish} color="inherit">Cancel</Button>
+          {currencyRows.length > 0 && (
+            <Button onClick={handleFinish} color="inherit">Cancel</Button>
+          )}
           <Typography
             variant="h4"
             sx={{

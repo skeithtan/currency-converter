@@ -26,6 +26,7 @@ export function App() {
   });
 
   const theme = useTheme();
+  const showSearch = isAddingCurrency || currencyRows.length === 0;
   useEffect(() => {
     localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(currencyRows));
   }, [currencyRows]);
@@ -105,7 +106,7 @@ export function App() {
         sx={{
           background: theme.palette.background.default,
           padding: 0,
-          height: "100vh",
+          height: "100dvh",
           width: "100vw",
           overflow: "hidden",
           position: "fixed",
@@ -143,7 +144,7 @@ export function App() {
               },
             }}
           >
-            {!isAddingCurrency &&
+            {!showSearch &&
               (
                 <CurrencyList
                   currencyRows={currencyRows}
@@ -154,7 +155,7 @@ export function App() {
                 />
               )}
 
-            {isAddingCurrency &&
+            {showSearch &&
               (
                 <AddCurrencyView
                   onFinish={() => setIsAddingCurrency(false)}
