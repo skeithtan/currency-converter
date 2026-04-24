@@ -2,7 +2,7 @@ import fx from "money";
 import { Conversion } from "../types/Conversion.ts";
 
 const CONVERSION_KEY = "fxConversion";
-const CACHE_TIME_TO_LIVE_HOURS = 6;
+const CACHE_TIME_TO_LIVE_HOURS = 12;
 const OPEN_EXCHANGE_RATES_URL = "https://openexchangerates.org/api/latest.json";
 
 interface ConversionCache extends Conversion {

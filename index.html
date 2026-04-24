@@ -52,5 +52,10 @@
   <body>
     <div id="root"></div>
     <script src="/src/main.tsx" type="module"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/currency-converter/sw.js");
+      }
+    </script>
   </body>
 </html>
