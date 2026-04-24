@@ -1,4 +1,4 @@
-import { Box, Button, Grid, Typography } from "@mui/material";
+import { Box, Button, Fade, Grid, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { CurrencyRow } from "./CurrencyRow.tsx";
 import { useEffect, useState } from "react";
@@ -60,42 +60,54 @@ export function CurrencyList({
           },
         }}
       >
-        <Grid
-          container
-          sx={{ alignItems: "center", justifyContent: "space-between" }}
-        >
-          {!isEditing && (
-            <Grid>
-              <Button
-                disabled={currencyRows.length === 0}
-                onClick={() => setIsEditing(true)}
-                color="inherit"
-              >
-                Modify
-              </Button>
+        <Box sx={{ position: "relative", minHeight: 40 }}>
+          <Fade in={!isEditing}>
+            <Grid
+              container
+              sx={{
+                alignItems: "center",
+                justifyContent: "space-between",
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+              }}
+            >
+              <Grid>
+                <Button
+                  disabled={currencyRows.length === 0}
+                  onClick={() => setIsEditing(true)}
+                  color="inherit"
+                >
+                  Modify
+                </Button>
+              </Grid>
+              <Grid>
+                <Button
+                  endIcon={<AddIcon />}
+                  onClick={onAddCurrencyClick}
+                  color="inherit"
+                >
+                  Add
+                </Button>
+              </Grid>
             </Grid>
-          )}
+          </Fade>
 
-          {!isEditing && (
-            <Grid>
-              <Button
-                endIcon={<AddIcon />}
-                onClick={onAddCurrencyClick}
-                color="inherit"
-              >
-                Add
-              </Button>
-            </Grid>
-          )}
-
-          {isEditing && (
-            <Grid>
+          <Fade in={isEditing}>
+            <Grid
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+              }}
+            >
               <Button color="inherit" onClick={() => setIsEditing(false)}>
                 Done
               </Button>
             </Grid>
-          )}
-        </Grid>
+          </Fade>
+        </Box>
 
         <Typography
           variant="h4"
