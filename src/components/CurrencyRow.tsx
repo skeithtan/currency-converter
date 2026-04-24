@@ -24,8 +24,8 @@ export function CurrencyRow({
   onValueChange,
   onRemove,
 }: CurrencyRowProps) {
-  const inputRef = useRef<HTMLInputElement>(undefined);
-  const rowRef = useRef<HTMLDivElement>(undefined);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const rowRef = useRef<HTMLDivElement>(null);
   const [isUpdatingValue, setIsUpdatingValue] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const formatter = new Intl.NumberFormat(undefined, {

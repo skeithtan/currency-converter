@@ -6,12 +6,17 @@ import {
   LinearProgress,
   Typography,
 } from "@mui/material";
-import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  KeyboardEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import SearchIcon from "@mui/icons-material/Search";
-import { currencyData } from "country-currency-emoji-flags";
 import { CurrencyRowData } from "../types/CurrencyRowData.ts";
 import { SearchSuggestionRow } from "./SearchSuggestionRow.tsx";
-import currencyToSymbolMap from "currency-symbol-map/map";
 import { SearchSuggestionData } from "../types/SearchSuggestionData.ts";
 import { focusAndOpenKeyboard } from "../utils/focusAndOpenKeyboard.ts";
 import EuroSymbolIcon from "@mui/icons-material/EuroSymbol";
@@ -20,19 +25,15 @@ import { useTheme } from "../theme.ts";
 
 import { CurrencyRecord } from "../types/Conversion.ts";
 import { loadCurrencies } from "../utils/loadCurrencies.ts";
+import { buildSearchIndex, searchCurrencies } from "../utils/currencySearch.ts";
 
 export function AddCurrencyView(
   { onFinish, onAddRow, currencyRows }: AddCurrencyViewProps,
 ) {
   const [searchValue, setSearchValue] = useState("");
-  const [suggestions, setSearchSuggestions] = useState<SearchSuggestionData[]>(
-    [],
-  );
   const [currencyRecords, setCurrencyRecords] = useState<
     CurrencyRecord | undefined
-  >(
-    undefined,
-  );
+  >(undefined);
   const inputRef = useRef<HTMLInputElement>(undefined);
   const theme = useTheme();
 
@@ -49,36 +50,15 @@ export function AddCurrencyView(
 
   useEffect(() => {
     loadCurrencies()
-      .then((data) => setCurrencyRecords(data));
+      .then((data) => {
+        buildSearchIndex(data);
+        setCurrencyRecords(data);
+      });
   }, []);
 
-  useEffect(() => {
-    if (!currencyRecords) {
-      setSearchSuggestions([]);
-      return;
-    }
-
-    const searchTerm = searchValue.trim().toUpperCase();
-    if (searchTerm.length === 0) {
-      setSearchSuggestions([]);
-      return;
-    }
-
-    const newSuggestions: SearchSuggestionData[] = Object.entries(
-      currencyRecords,
-    )
-      .filter(([code, name]) =>
-        code.toUpperCase().includes(searchTerm) ||
-        name.toUpperCase().includes(searchTerm)
-      )
-      .map(([code, name]) => ({
-        code,
-        emoji: currencyData[code] as string,
-        symbol: currencyToSymbolMap[code],
-        name,
-      }));
-
-    setSearchSuggestions(newSuggestions);
+  const suggestions: SearchSuggestionData[] = useMemo(() => {
+    if (!currencyRecords) return [];
+    return searchCurrencies(searchValue);
   }, [searchValue, currencyRecords]);
 
   function handleSearchBarKeyDown(event: KeyboardEvent<HTMLInputElement>) {
