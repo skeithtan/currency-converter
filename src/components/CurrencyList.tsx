@@ -47,6 +47,7 @@ export function CurrencyList({
         sx={{
           px: 1,
           py: 2,
+          paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)",
           borderBottom: "1px solid",
           borderColor: theme.palette.divider,
           background: theme.palette.primary.main,

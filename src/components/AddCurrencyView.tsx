@@ -6,7 +6,7 @@ import {
   LinearProgress,
   Typography,
 } from "@mui/material";
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import { currencyData } from "country-currency-emoji-flags";
 import { CurrencyRowData } from "../types/CurrencyRowData.ts";
@@ -17,7 +17,7 @@ import { focusAndOpenKeyboard } from "../utils/focusAndOpenKeyboard.ts";
 import EuroSymbolIcon from "@mui/icons-material/EuroSymbol";
 import { EmptyState } from "./EmptyState.tsx";
 import { useTheme } from "../theme.ts";
-import { KeyboardEvent } from "npm:@types/react@19.1.8";
+
 import { CurrencyRecord } from "../types/Conversion.ts";
 import { loadCurrencies } from "../utils/loadCurrencies.ts";
 
@@ -122,6 +122,7 @@ export function AddCurrencyView(
           sx={{
             px: 1,
             py: 2,
+            paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)",
             borderBottom: "1px solid",
             borderColor: theme.palette.divider,
           }}
