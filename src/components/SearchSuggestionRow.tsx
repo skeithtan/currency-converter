@@ -4,7 +4,7 @@ import { SearchSuggestionData } from "../types/SearchSuggestionData.ts";
 export function SearchSuggestionRow(
   { suggestion, alreadyAdded, onClick }: SearchSuggestionRowProps,
 ) {
-  const { emoji, symbol, code } = suggestion;
+  const { emoji, symbol, code, name } = suggestion;
   return (
     <ListItemButton
       divider
@@ -22,7 +22,7 @@ export function SearchSuggestionRow(
         <Grid>
           <ListItemText
             primary={`${emoji ?? "💰"} ${code}`}
-            secondary={alreadyAdded ? "Already added" : undefined}
+            secondary={alreadyAdded ? "Already added" : name}
           />
         </Grid>
 
