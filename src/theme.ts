@@ -44,7 +44,7 @@ export function useTheme(): Theme {
               body: {
                 height: "100%",
                 overflow: "hidden",
-                backgroundColor: "#178459",
+                backgroundColor: prefersDarkMode ? "#000" : "#fff",
               },
             },
           },
