@@ -115,54 +115,84 @@ export function CurrencyList({
           Currencies
         </Typography>
       </Box>
-      <Box sx={{ overflow: "auto", flex: 1, WebkitOverflowScrolling: "touch" }}>
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="currency-list">
-            {(provided) => (
-              <div ref={provided.innerRef} {...provided.droppableProps}>
-                {currencyRows.map((row, index) => (
-                  <Draggable
-                    key={row.code}
-                    draggableId={row.code}
-                    index={index}
-                    isDragDisabled={!isEditing}
-                  >
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        style={{
-                          ...provided.draggableProps.style,
-                          opacity: snapshot.isDragging ? 0.7 : 1,
-                        }}
-                      >
-                        <CurrencyRow
-                          code={row.code}
-                          emoji={row.emoji}
-                          symbol={row.symbol}
-                          value={row.value}
-                          isLoading={row.isLoading}
-                          isEditing={isEditing}
-                          onValueChange={(newValue) =>
-                            onRowValueChange(row, newValue)}
-                          onRemove={() => onRemoveRow(row)}
-                        />
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
-        {currencyRows.length === 0 && (
-          <EmptyState
-            icon={CurrencyExchangeIcon}
-            emptyText="Add at least two currencies to see the conversion."
-            buttonText="Add a currency"
-            onButtonClick={onAddCurrencyClick}
+      <Box
+        sx={{
+          flex: 1,
+          position: "relative",
+          overflow: "hidden",
+          minHeight: 0,
+        }}
+      >
+        <Box
+          sx={{
+            overflow: "auto",
+            height: "100%",
+            WebkitOverflowScrolling: "touch",
+            overscrollBehavior: "contain",
+          }}
+        >
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="currency-list">
+              {(provided) => (
+                <div ref={provided.innerRef} {...provided.droppableProps}>
+                  {currencyRows.map((row, index) => (
+                    <Draggable
+                      key={row.code}
+                      draggableId={row.code}
+                      index={index}
+                      isDragDisabled={!isEditing}
+                    >
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          style={{
+                            ...provided.draggableProps.style,
+                            opacity: snapshot.isDragging ? 0.7 : 1,
+                          }}
+                        >
+                          <CurrencyRow
+                            code={row.code}
+                            emoji={row.emoji}
+                            symbol={row.symbol}
+                            value={row.value}
+                            isLoading={row.isLoading}
+                            isEditing={isEditing}
+                            onValueChange={(newValue) =>
+                              onRowValueChange(row, newValue)}
+                            onRemove={() => onRemoveRow(row)}
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+          {currencyRows.length === 0 && (
+            <EmptyState
+              icon={CurrencyExchangeIcon}
+              emptyText="Add at least two currencies to see the conversion."
+              buttonText="Add a currency"
+              onButtonClick={onAddCurrencyClick}
+            />
+          )}
+        </Box>
+        {currencyRows.length > 0 && (
+          <Box
+            sx={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 32,
+              background:
+                `linear-gradient(to bottom, transparent, ${theme.palette.background.default})`,
+              pointerEvents: "none",
+            }}
           />
         )}
       </Box>

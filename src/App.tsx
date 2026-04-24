@@ -106,12 +106,12 @@ export function App() {
         sx={{
           background: theme.palette.background.default,
           padding: 0,
-          height: "100dvh",
-          width: "100vw",
-          overflow: "hidden",
           position: "fixed",
           top: 0,
           left: 0,
+          right: 0,
+          bottom: 0,
+          overflow: "hidden",
         }}
       >
         <Container
