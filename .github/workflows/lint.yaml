@@ -21,6 +21,9 @@ jobs:
         with:
           deno-version: v2.x
 
+      - name: Install dependencies
+        run: deno install
+
       - name: Verify formatting
         run: deno fmt --check
 
@@ -29,3 +32,6 @@ jobs:
 
       - name: Run type check
         run: deno check .
+
+      - name: Run tests
+        run: deno task test
