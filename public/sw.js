@@ -1,7 +1,42 @@
-const CACHE_NAME = "vert-v1";
+const CACHE_NAME = "vert-v2";
+const scopeUrl = new URL(self.registration.scope);
+const precacheList = [
+  scopeUrl.href,
+  new URL("manifest.webmanifest", scopeUrl).href,
+  new URL("favicon.ico", scopeUrl).href,
+  new URL("logo192.png", scopeUrl).href,
+  new URL("logo512.png", scopeUrl).href,
+];
 
-self.addEventListener("install", () => {
-  self.skipWaiting();
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(precacheList))
+      .then(() => self.skipWaiting()),
+  );
+});
+
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+
+  if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
+
+  if (url.origin !== self.location.origin) return;
+
+  if (request.mode === "navigate") {
+    event.respondWith(networkFirstNavigation(request));
+    return;
+  }
+
+  if (url.pathname.includes("/assets/")) {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  event.respondWith(staleWhileRevalidate(event));
 });
 
 self.addEventListener("activate", (event) => {
@@ -10,68 +45,30 @@ self.addEventListener("activate", (event) => {
       .keys()
       .then((keys) =>
         Promise.all(
-          keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)),
+          keys.filter((key) => key !== CACHE_NAME).map((key) =>
+            caches.delete(key)
+          ),
         )
-      ),
+      )
+      .then(() => self.clients.claim()),
   );
-  self.clients.claim();
 });
 
-self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-
-  const url = new URL(event.request.url);
-
-  // API calls: network-first with cache fallback for offline support
-  if (url.hostname === "openexchangerates.org") {
-    event.respondWith(networkFirst(event.request));
-    return;
-  }
-
-  // Google Fonts: cache-first (they're immutable)
-  if (
-    url.hostname === "fonts.googleapis.com" ||
-    url.hostname === "fonts.gstatic.com"
-  ) {
-    event.respondWith(cacheFirst(event.request));
-    return;
-  }
-
-  // App assets: stale-while-revalidate
-  event.respondWith(staleWhileRevalidate(event.request));
-});
-
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
-
-  const fetchPromise = fetch(request)
-    .then((response) => {
-      if (response.ok) {
-        cache.put(request, response.clone());
-      }
-      return response;
-    })
-    .catch(() => cached);
-
-  return cached || fetchPromise;
-}
-
-async function networkFirst(request) {
+async function networkFirstNavigation(request) {
   const cache = await caches.open(CACHE_NAME);
 
   try {
     const response = await fetch(request);
     if (response.ok) {
-      cache.put(request, response.clone());
+      await cache.put(scopeUrl, response.clone());
     }
     return response;
   } catch {
-    const cached = await cache.match(request);
-    return cached || new Response('{"error": "offline"}', {
-      status: 503,
-      headers: { "Content-Type": "application/json" },
-    });
+    return (await caches.match(scopeUrl)) ||
+      new Response("Offline", {
+        status: 503,
+        headers: { "Content-Type": "text/plain" },
+      });
   }
 }
 
@@ -81,13 +78,28 @@ async function cacheFirst(request) {
 
   if (cached) return cached;
 
-  try {
-    const response = await fetch(request);
+  const response = await fetch(request);
+  if (response.ok) {
+    await cache.put(request, response.clone());
+  }
+  return response;
+}
+
+async function staleWhileRevalidate(event) {
+  const request = event.request;
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+  const networkResponse = fetch(request).then(async (response) => {
     if (response.ok) {
-      cache.put(request, response.clone());
+      await cache.put(request, response.clone());
     }
     return response;
-  } catch {
-    return new Response("", { status: 503 });
+  });
+
+  if (cached) {
+    event.waitUntil(networkResponse.then(() => undefined).catch(() => {}));
+    return cached;
   }
+
+  return networkResponse;
 }
