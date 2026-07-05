@@ -1,13 +1,15 @@
 {
+  "exclude": ["dist/"],
+  "nodeModulesDir": "auto",
   "tasks": {
-    "dev": "deno run -A --node-modules-dir --env-file npm:vite",
-    "build": "deno run -A --node-modules-dir npm:vite build",
-    "preview": "deno run -A --node-modules-dir npm:vite preview",
+    "dev": "deno run -A --env-file npm:vite",
+    "build": "deno run -A npm:vite build",
+    "preview": "deno run -A npm:vite preview",
     "serve": "deno run --allow-net --allow-read jsr:@std/http@1/file-server dist/"
   },
   "compilerOptions": {
     "lib": [
-      "ES2020",
+      "ES2022",
       "DOM",
       "DOM.Iterable"
     ],

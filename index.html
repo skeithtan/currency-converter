@@ -51,18 +51,18 @@
   </head>
   <body style="background-color: #fff; margin: 0">
     <style>
-      @media (prefers-color-scheme: dark) {
-        body {
-          background-color: #000 !important;
-        }
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #000 !important;
       }
+    }
     </style>
     <div id="root"></div>
     <script src="/src/main.tsx" type="module"></script>
     <script>
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/currency-converter/sw.js");
-      }
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/currency-converter/sw.js");
+    }
     </script>
   </body>
 </html>
