@@ -9,7 +9,7 @@ import {
   Skeleton,
   Typography,
 } from "@mui/material";
-import { ChangeEvent, KeyboardEvent, useRef, useState } from "react";
+import { ChangeEvent, KeyboardEvent, useMemo, useRef, useState } from "react";
 import { RemoveCircleOutlined } from "@mui/icons-material";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import { focusAndOpenKeyboard } from "../utils/focusAndOpenKeyboard.ts";
@@ -28,12 +28,16 @@ export function CurrencyRow({
   const rowRef = useRef<HTMLDivElement>(null);
   const [isUpdatingValue, setIsUpdatingValue] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const formatter = new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: code,
-    currencyDisplay: "narrowSymbol",
-    useGrouping: true,
-  });
+  const formatter = useMemo(
+    () =>
+      new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: code,
+        currencyDisplay: "narrowSymbol",
+        useGrouping: true,
+      }),
+    [code],
+  );
   const formattedNumber = value
     ? formatter.format(parseFloat(value))
     : undefined;
@@ -191,7 +195,7 @@ export function CurrencyRow({
 
 interface CurrencyRowProps {
   code: string;
-  symbol: string;
+  symbol?: string;
   isLoading: boolean;
   isEditing: boolean;
   emoji?: string;

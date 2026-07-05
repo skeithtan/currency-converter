@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import { Container, Paper, ThemeProvider } from "@mui/material";
+import { Container, Paper, Snackbar, ThemeProvider } from "@mui/material";
 import { Theme } from "@mui/material/styles";
 import { useTheme } from "./theme.ts";
 import { CurrencyList } from "./components/CurrencyList.tsx";
 import { AddCurrencyView } from "./components/AddCurrencyView.tsx";
 import { CurrencyRowData } from "./types/CurrencyRowData.ts";
-import { loadConversionRates } from "./utils/loadConversionRates.ts";
-import fx from "money";
 import { SearchSuggestionData } from "./types/SearchSuggestionData.ts";
+import { convert, loadRates, RatesUnavailableError } from "./utils/rates.ts";
 
 export function App() {
   const [isAddingCurrency, setIsAddingCurrency] = useState(false);
@@ -18,25 +17,30 @@ export function App() {
     }
 
     try {
-      const parsedState = JSON.parse(localStorageState);
-      return Array.isArray(parsedState) ? parsedState : [];
+      return sanitizeCurrencyRows(JSON.parse(localStorageState));
     } catch {
       return [];
     }
   });
+  const [convertingCode, setConvertingCode] = useState<string | null>(null);
+  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
 
   const theme = useTheme();
   const showSearch = isAddingCurrency || currencyRows.length === 0;
+
+  useEffect(() => {
+    localStorage.removeItem("currencies");
+  }, []);
+
   useEffect(() => {
     localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(currencyRows));
   }, [currencyRows]);
 
   async function handleAddRow({ code, emoji, symbol }: SearchSuggestionData) {
     if (currencyRows.length === 0) {
-      const newRow = {
+      const newRow: CurrencyRowData = {
         code,
         emoji,
-        isLoading: false,
         value: "0",
         symbol,
       };
@@ -51,17 +55,46 @@ export function App() {
     }
 
     const baseRow = currencyRows[0];
-    await loadConversionRates();
-
-    const value = Number(
-      fx.convert(parseFloat(baseRow.value?.toString() ?? "0"), {
-        from: baseRow.code,
-        to: code,
-      }),
-    ).toFixed(2);
-    const newRow = { code, emoji, isLoading: false, value, symbol };
-
+    const newRow: CurrencyRowData = {
+      code,
+      emoji,
+      symbol,
+      value: undefined,
+    };
     setCurrencyRows((rows) => [...rows, newRow]);
+    setConvertingCode(baseRow.code);
+
+    try {
+      const rates = await loadRates();
+      const value = convert(
+        parseFloat(baseRow.value ?? "0"),
+        baseRow.code,
+        code,
+        rates,
+      );
+      if (value != null) {
+        setCurrencyRows((rows) =>
+          rows.map((row) =>
+            row.code === code ? { ...row, value: value.toFixed(2) } : row
+          )
+        );
+      }
+      if (rates.isStale) {
+        setSnackbarMessage(
+          `Offline — using saved rates from ${
+            new Date(rates.fetchedAt).toLocaleDateString()
+          }`,
+        );
+      }
+    } catch (error) {
+      setSnackbarMessage(
+        error instanceof RatesUnavailableError
+          ? "You're offline and no saved rates are available yet"
+          : "Couldn't update rates",
+      );
+    } finally {
+      setConvertingCode(null);
+    }
   }
 
   async function handleRowValueChange(row: CurrencyRowData, newValue: number) {
@@ -70,33 +103,41 @@ export function App() {
     }
 
     setCurrencyRows((rows) =>
-      rows.map((r) => {
-        if (r.code === row.code) {
-          return { ...r, value: newValue.toString() };
-        }
-
-        return { ...r, isLoading: true };
-      })
+      rows.map((r) =>
+        r.code === row.code ? { ...r, value: newValue.toString() } : r
+      )
     );
+    setConvertingCode(row.code);
 
-    await loadConversionRates();
-
-    setCurrencyRows((currencyRows) =>
-      currencyRows.map((r) => {
-        if (r.code === row.code) {
-          return r;
-        }
-
-        const value = Number(
-          fx.convert(newValue, { from: row.code, to: r.code }),
-        ).toFixed(2);
-        return { ...r, value, isLoading: false };
-      })
-    );
+    try {
+      const rates = await loadRates();
+      setCurrencyRows((rows) =>
+        rows.map((r) => {
+          if (r.code === row.code) return r;
+          const value = convert(newValue, row.code, r.code, rates);
+          return value == null ? r : { ...r, value: value.toFixed(2) };
+        })
+      );
+      if (rates.isStale) {
+        setSnackbarMessage(
+          `Offline — using saved rates from ${
+            new Date(rates.fetchedAt).toLocaleDateString()
+          }`,
+        );
+      }
+    } catch (error) {
+      setSnackbarMessage(
+        error instanceof RatesUnavailableError
+          ? "You're offline and no saved rates are available yet"
+          : "Couldn't update rates",
+      );
+    } finally {
+      setConvertingCode(null);
+    }
   }
 
   function handleRemoveRow(row: CurrencyRowData) {
-    setCurrencyRows((rows) => rows.filter((r) => r !== row));
+    setCurrencyRows((rows) => rows.filter((r) => r.code !== row.code));
   }
 
   return (
@@ -148,6 +189,7 @@ export function App() {
               (
                 <CurrencyList
                   currencyRows={currencyRows}
+                  convertingCode={convertingCode}
                   onAddCurrencyClick={() => setIsAddingCurrency(true)}
                   onRowValueChange={handleRowValueChange}
                   onRemoveRow={handleRemoveRow}
@@ -166,8 +208,41 @@ export function App() {
           </Paper>
         </Container>
       </Container>
+      <Snackbar
+        open={snackbarMessage != null}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarMessage(null)}
+        message={snackbarMessage}
+      />
     </ThemeProvider>
   );
 }
 
 const LOCALSTORAGE_KEY = "currencyRows";
+const CURRENCY_CODE_PATTERN = /^[A-Z]{3}$/;
+
+function sanitizeCurrencyRows(value: unknown): CurrencyRowData[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap((entry): CurrencyRowData[] => {
+    if (
+      typeof entry !== "object" || entry === null || Array.isArray(entry)
+    ) {
+      return [];
+    }
+
+    const storedRow = entry as Record<string, unknown>;
+    if (
+      typeof storedRow.code !== "string" ||
+      !CURRENCY_CODE_PATTERN.test(storedRow.code)
+    ) {
+      return [];
+    }
+
+    const row: CurrencyRowData = { code: storedRow.code };
+    if (typeof storedRow.emoji === "string") row.emoji = storedRow.emoji;
+    if (typeof storedRow.symbol === "string") row.symbol = storedRow.symbol;
+    if (typeof storedRow.value === "string") row.value = storedRow.value;
+    return [row];
+  });
+}

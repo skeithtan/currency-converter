@@ -1,11 +1,10 @@
-import { Box, Button, Fade, Grid, Typography } from "@mui/material";
+import { Box, Button, Fade, Grid, Typography, useTheme } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { CurrencyRow } from "./CurrencyRow.tsx";
 import { useEffect, useState } from "react";
 import { CurrencyRowData } from "../types/CurrencyRowData.ts";
 import { EmptyState } from "./EmptyState.tsx";
 import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
-import { useTheme } from "../theme.ts";
 import {
   DragDropContext,
   Draggable,
@@ -19,6 +18,7 @@ export function CurrencyList({
   onRowValueChange,
   onRemoveRow,
   onReorder,
+  convertingCode,
 }: CurrencyDisplayProps & {
   onReorder?: (newRows: CurrencyRowData[]) => void;
 }) {
@@ -157,7 +157,8 @@ export function CurrencyList({
                             emoji={row.emoji}
                             symbol={row.symbol}
                             value={row.value}
-                            isLoading={row.isLoading}
+                            isLoading={convertingCode !== null &&
+                              convertingCode !== row.code}
                             isEditing={isEditing}
                             onValueChange={(newValue) =>
                               onRowValueChange(row, newValue)}
@@ -202,6 +203,7 @@ export function CurrencyList({
 
 interface CurrencyDisplayProps {
   currencyRows: CurrencyRowData[];
+  convertingCode: string | null;
   onAddCurrencyClick(): void;
   onRowValueChange(row: CurrencyRowData, newValue: number): void;
   onRemoveRow(row: CurrencyRowData): void;

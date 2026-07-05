@@ -92,7 +92,11 @@ export async function loadRates(
   }
 
   const fetchedAt = now().toISOString();
-  const storedRates: CachedRates = { ...conversion, fetchedAt };
+  const storedRates: CachedRates = {
+    base: conversion.base,
+    rates: conversion.rates,
+    fetchedAt,
+  };
   storage.setItem(CACHE_KEY, JSON.stringify(storedRates));
   return { ...storedRates, isStale: false };
 }

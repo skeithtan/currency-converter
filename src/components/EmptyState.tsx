@@ -41,7 +41,7 @@ export function EmptyState(
         (
           <Grid>
             <Button onClick={onButtonClick} variant="outlined">
-              Add a currency
+              {buttonText}
             </Button>
           </Grid>
         )}

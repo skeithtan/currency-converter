@@ -1,15 +1,13 @@
-import { currencyData } from "country-currency-emoji-flags";
-import currencyToSymbolMap from "currency-symbol-map/map";
 import { SearchSuggestionData } from "../types/SearchSuggestionData.ts";
-import { CurrencyRecord } from "../types/Conversion.ts";
+import { getAllCurrencies } from "./currencies.ts";
 
 interface IndexedCurrency {
   code: string;
   name: string;
   nameUpper: string;
   nameWords: string[];
-  emoji: string;
-  symbol: string;
+  emoji?: string;
+  symbol?: string;
 }
 
 const POPULAR_CODES = [
@@ -31,33 +29,24 @@ const POPULAR_CODES = [
   "THB",
 ];
 
-let indexedCurrencies: IndexedCurrency[] = [];
-
-export function buildSearchIndex(currencies: CurrencyRecord) {
-  indexedCurrencies = Object.entries(currencies).map(([code, name]) => ({
-    code,
-    name,
-    nameUpper: name.toUpperCase(),
-    nameWords: name.toUpperCase().split(/\s+/),
-    emoji: currencyData[code] as string,
-    symbol: currencyToSymbolMap[code],
-  }));
-}
+let indexedCurrencies: IndexedCurrency[] | undefined;
 
 export function getPopularCurrencies(): SearchSuggestionData[] {
+  const currencies = getIndexedCurrencies();
   return POPULAR_CODES
-    .map((code) => indexedCurrencies.find((c) => c.code === code))
+    .map((code) => currencies.find((c) => c.code === code))
     .filter((c): c is IndexedCurrency => c != null)
     .map(toSuggestion);
 }
 
 export function searchCurrencies(query: string): SearchSuggestionData[] {
+  const currencies = getIndexedCurrencies();
   const term = query.trim().toUpperCase();
   if (term.length === 0) return getPopularCurrencies();
 
   const scored: { currency: IndexedCurrency; score: number }[] = [];
 
-  for (const currency of indexedCurrencies) {
+  for (const currency of currencies) {
     const score = scoreCurrency(currency, term);
     if (score > 0) {
       scored.push({ currency, score });
@@ -70,6 +59,22 @@ export function searchCurrencies(query: string): SearchSuggestionData[] {
   );
 
   return scored.map(({ currency }) => toSuggestion(currency));
+}
+
+function getIndexedCurrencies(): IndexedCurrency[] {
+  if (indexedCurrencies) return indexedCurrencies;
+
+  indexedCurrencies = getAllCurrencies().map(
+    ({ code, name, emoji, symbol }) => ({
+      code,
+      name,
+      nameUpper: name.toUpperCase(),
+      nameWords: name.toUpperCase().split(/\s+/),
+      emoji,
+      symbol,
+    }),
+  );
+  return indexedCurrencies;
 }
 
 function scoreCurrency(currency: IndexedCurrency, term: string): number {

@@ -3,8 +3,8 @@ import {
   Button,
   InputAdornment,
   InputBase,
-  LinearProgress,
   Typography,
+  useTheme,
 } from "@mui/material";
 import {
   ChangeEvent,
@@ -21,19 +21,12 @@ import { SearchSuggestionData } from "../types/SearchSuggestionData.ts";
 import { focusAndOpenKeyboard } from "../utils/focusAndOpenKeyboard.ts";
 import EuroSymbolIcon from "@mui/icons-material/EuroSymbol";
 import { EmptyState } from "./EmptyState.tsx";
-import { useTheme } from "../theme.ts";
-
-import { CurrencyRecord } from "../types/Conversion.ts";
-import { loadCurrencies } from "../utils/loadCurrencies.ts";
-import { buildSearchIndex, searchCurrencies } from "../utils/currencySearch.ts";
+import { searchCurrencies } from "../utils/currencySearch.ts";
 
 export function AddCurrencyView(
   { onFinish, onAddRow, currencyRows }: AddCurrencyViewProps,
 ) {
   const [searchValue, setSearchValue] = useState("");
-  const [currencyRecords, setCurrencyRecords] = useState<
-    CurrencyRecord | undefined
-  >(undefined);
   const inputRef = useRef<HTMLInputElement>(undefined);
   const theme = useTheme();
 
@@ -48,18 +41,10 @@ export function AddCurrencyView(
     }
   }, []);
 
-  useEffect(() => {
-    loadCurrencies()
-      .then((data) => {
-        buildSearchIndex(data);
-        setCurrencyRecords(data);
-      });
-  }, []);
-
-  const suggestions: SearchSuggestionData[] = useMemo(() => {
-    if (!currencyRecords) return [];
-    return searchCurrencies(searchValue);
-  }, [searchValue, currencyRecords]);
+  const suggestions: SearchSuggestionData[] = useMemo(
+    () => searchCurrencies(searchValue),
+    [searchValue],
+  );
 
   function handleSearchBarKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key !== "Enter") {
@@ -139,7 +124,6 @@ export function AddCurrencyView(
             </InputAdornment>
           }
         />
-        {currencyRecords == null && <LinearProgress />}
       </Box>
       <Box sx={{ overflow: "auto", flex: 1, WebkitOverflowScrolling: "touch" }}>
         {suggestions.map((suggestion) => (

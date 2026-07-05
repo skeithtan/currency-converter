@@ -1,6 +1,6 @@
 export interface SearchSuggestionData {
   code: string;
-  emoji: string;
-  symbol: string;
   name: string;
+  emoji?: string;
+  symbol?: string;
 }

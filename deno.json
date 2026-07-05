@@ -31,7 +31,6 @@
     "@vitejs/plugin-react": "npm:@vitejs/plugin-react@^6.0.3",
     "country-currency-emoji-flags": "npm:country-currency-emoji-flags@^1.1.1",
     "currency-symbol-map": "npm:currency-symbol-map@^5.1.0",
-    "money": "npm:money@^0.2.0",
     "react": "npm:react@^19.2.7",
     "react-dom": "npm:react-dom@^19.2.7",
     "vite": "npm:vite@^8.1.3"
