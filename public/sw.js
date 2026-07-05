@@ -1,4 +1,4 @@
-const CACHE_NAME = "vert-v2";
+const CACHE_NAME = "vert-v3";
 const scopeUrl = new URL(self.registration.scope);
 const precacheList = [
   scopeUrl.href,
@@ -10,10 +10,53 @@ const precacheList = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(precacheList))
-      .then(() => self.skipWaiting()),
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.addAll(precacheList);
+
+      const shellResponse = await cache.match(scopeUrl, { ignoreVary: true });
+      if (!shellResponse) throw new Error("Cached shell response not found");
+
+      const shellHtml = await shellResponse.text();
+      const assetUrls = [
+        ...shellHtml.matchAll(
+          /(?:src|href)\s*=\s*["']([^"']*\/assets\/[^"']+)["']/g,
+        ),
+      ].map((match) => new URL(match[1], scopeUrl).href);
+      const uncachedAssetUrls = [
+        ...new Set(assetUrls.filter((url) => !precacheList.includes(url))),
+      ];
+
+      await cache.addAll(uncachedAssetUrls);
+
+      const cssUrls = uncachedAssetUrls.filter((url) =>
+        new URL(url).pathname.endsWith(".css")
+      );
+      const fontUrls = new Set();
+
+      for (const cssUrl of cssUrls) {
+        const cssResponse = await cache.match(cssUrl, { ignoreVary: true });
+        if (!cssResponse) continue;
+
+        const css = await cssResponse.text();
+        for (
+          const match of css.matchAll(
+            /url\(\s*["']?([^"')]+\.woff2?)["']?\s*\)/g,
+          )
+        ) {
+          fontUrls.add(new URL(match[1], cssUrl).href);
+        }
+      }
+
+      await Promise.allSettled(
+        [...fontUrls].map(async (fontUrl) => {
+          const response = await fetch(fontUrl);
+          if (response.ok) await cache.put(fontUrl, response);
+        }),
+      );
+
+      await self.skipWaiting();
+    })(),
   );
 });
 
@@ -64,7 +107,7 @@ async function networkFirstNavigation(request) {
     }
     return response;
   } catch {
-    return (await caches.match(scopeUrl)) ||
+    return (await caches.match(scopeUrl, { ignoreVary: true })) ||
       new Response("Offline", {
         status: 503,
         headers: { "Content-Type": "text/plain" },
@@ -74,7 +117,7 @@ async function networkFirstNavigation(request) {
 
 async function cacheFirst(request) {
   const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
+  const cached = await cache.match(request, { ignoreVary: true });
 
   if (cached) return cached;
 
@@ -88,7 +131,7 @@ async function cacheFirst(request) {
 async function staleWhileRevalidate(event) {
   const request = event.request;
   const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
+  const cached = await cache.match(request, { ignoreVary: true });
   const networkResponse = fetch(request).then(async (response) => {
     if (response.ok) {
       await cache.put(request, response.clone());
