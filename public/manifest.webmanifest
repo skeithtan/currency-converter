@@ -1,5 +1,11 @@
 {
-  "name": "Vert",
+  "name": "Vert — Currency Converter",
+  "short_name": "Vert",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "theme_color": "#178459",
+  "background_color": "#ffffff",
   "icons": [
     {
       "src": "favicon.ico",
@@ -16,7 +22,5 @@
       "type": "image/png",
       "sizes": "512x512"
     }
-  ],
-  "start_url": ".",
-  "display": "standalone"
+  ]
 }
