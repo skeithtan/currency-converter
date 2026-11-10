@@ -4,6 +4,7 @@ import { CurrencyRow } from "./CurrencyRow.tsx";
 import { useEffect, useState } from "react";
 import { CurrencyRowData } from "../types/CurrencyRowData.ts";
 import { EmptyState } from "./EmptyState.tsx";
+import { SCROLL_CONTAINER_ATTRIBUTE } from "../utils/keepAboveKeyboard.ts";
 import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
 import {
   DragDropContext,
@@ -124,6 +125,7 @@ export function CurrencyList({
         }}
       >
         <Box
+          {...{ [SCROLL_CONTAINER_ATTRIBUTE]: "" }}
           sx={{
             overflow: "auto",
             height: "100%",

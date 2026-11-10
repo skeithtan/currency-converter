@@ -9,10 +9,18 @@ import {
   Skeleton,
   Typography,
 } from "@mui/material";
-import { ChangeEvent, KeyboardEvent, useMemo, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  KeyboardEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { RemoveCircleOutlined } from "@mui/icons-material";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import { focusAndOpenKeyboard } from "../utils/focusAndOpenKeyboard.ts";
+import { keepAboveKeyboard } from "../utils/keepAboveKeyboard.ts";
 
 export function CurrencyRow({
   code,
@@ -26,6 +34,7 @@ export function CurrencyRow({
 }: CurrencyRowProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const rowRef = useRef<HTMLDivElement>(null);
+  const stopKeepingAboveKeyboardRef = useRef<(() => void) | null>(null);
   const [isUpdatingValue, setIsUpdatingValue] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const formatter = useMemo(
@@ -42,49 +51,36 @@ export function CurrencyRow({
     ? formatter.format(parseFloat(value))
     : undefined;
 
-  function findScrollParent(el: HTMLElement | null): HTMLElement | null {
-    let parent = el?.parentElement ?? null;
-    while (parent && parent.scrollHeight <= parent.clientHeight) {
-      parent = parent.parentElement;
-    }
-    return parent;
+  function stopKeepingAboveKeyboard() {
+    stopKeepingAboveKeyboardRef.current?.();
+    stopKeepingAboveKeyboardRef.current = null;
   }
 
+  // Restore the list if the row disappears while it is being edited.
+  useEffect(() => stopKeepingAboveKeyboard, []);
+
   function handleClick() {
-    if (isLoading || isEditing) {
+    // Taps inside the open input (e.g. to move the caret) bubble up here;
+    // re-opening would blur the input and commit the value prematurely.
+    if (isLoading || isEditing || isUpdatingValue) {
       return;
     }
 
     setIsUpdatingValue(true);
     if (inputRef.current) {
       focusAndOpenKeyboard(inputRef.current);
-      const row = rowRef.current;
-      if (row) {
-        const scrollParent = findScrollParent(row);
-        if (scrollParent) {
-          const halfHeight = scrollParent.clientHeight / 2;
-          scrollParent.style.paddingBottom = `${halfHeight}px`;
-          const rowRect = row.getBoundingClientRect();
-          const containerRect = scrollParent.getBoundingClientRect();
-          const rowTop = rowRect.top - containerRect.top +
-            scrollParent.scrollTop;
-          const targetScroll = rowTop - scrollParent.clientHeight / 3;
-          scrollParent.scrollTo({
-            top: Math.max(0, targetScroll),
-            behavior: "smooth",
-          });
-        }
+      if (rowRef.current) {
+        stopKeepingAboveKeyboard();
+        stopKeepingAboveKeyboardRef.current = keepAboveKeyboard(
+          rowRef.current,
+        );
       }
     }
   }
 
   function endUpdatingValue() {
     setIsUpdatingValue(false);
-    // Remove the extra padding added for centering
-    const scrollParent = findScrollParent(rowRef.current);
-    if (scrollParent) {
-      scrollParent.style.paddingBottom = "";
-    }
+    stopKeepingAboveKeyboard();
     const newValue = inputRef.current?.valueAsNumber;
     if (newValue == null) {
       return;
