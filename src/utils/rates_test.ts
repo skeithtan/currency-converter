@@ -1,6 +1,13 @@
 /// <reference lib="deno.ns" />
 
-import { convert, loadRates, RatesUnavailableError } from "./rates.ts";
+import {
+  convert,
+  fetchRates,
+  isStale,
+  type LoadedRates,
+  needsRefresh,
+  readCachedRates,
+} from "./rates.ts";
 
 const CACHE_KEY = "fxConversion";
 const BASE_TIME = new Date("2024-01-02T00:00:00.000Z");
@@ -44,6 +51,15 @@ function response(body: unknown, status = 200): Response {
   });
 }
 
+async function rejection(promise: Promise<unknown>): Promise<unknown> {
+  try {
+    await promise;
+  } catch (error) {
+    return error;
+  }
+  throw new Error("expected promise to reject");
+}
+
 function assert(condition: boolean, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
@@ -60,115 +76,140 @@ function assertEquals(
   }
 }
 
-Deno.test("loadRates returns a fresh cache without fetching or writing", async () => {
+Deno.test("readCachedRates keeps rates however old they are", () => {
   const storage = new FakeStorage([
-    [CACHE_KEY, cacheAt("2024-01-01T18:00:00.000Z")],
+    [CACHE_KEY, cacheAt("2023-06-01T00:00:00.000Z")],
   ]);
-  let fetchCalls = 0;
-  const fetchFn = (() => {
-    fetchCalls++;
-    return Promise.resolve(response(CACHED_RATES));
-  }) as typeof fetch;
 
-  const loaded = await loadRates({ storage, fetchFn, now: () => BASE_TIME });
+  const cached = readCachedRates({ storage, now: () => BASE_TIME });
 
-  assertEquals(loaded, {
+  assertEquals(cached, {
     ...CACHED_RATES,
-    fetchedAt: "2024-01-01T18:00:00.000Z",
-    isStale: false,
-  }, "fresh cache result");
-  assert(fetchCalls === 0, "fresh cache must not fetch");
-  assert(storage.writes === 0, "fresh cache must not be rewritten");
+    fetchedAt: "2023-06-01T00:00:00.000Z",
+  }, "months-old rates are still returned");
+  assert(storage.removals === 0, "old rates must not be discarded");
 });
 
-Deno.test("loadRates refreshes an expired cache and writes a new timestamp", async () => {
+Deno.test("readCachedRates returns undefined when nothing is saved", () => {
+  const storage = new FakeStorage();
+  assert(
+    readCachedRates({ storage, now: () => BASE_TIME }) === undefined,
+    "empty storage",
+  );
+});
+
+Deno.test("readCachedRates discards a corrupt cache", () => {
+  const storage = new FakeStorage([
+    [CACHE_KEY, JSON.stringify({ fetchedAt: "2024-01-01T00:00:00Z" })],
+  ]);
+
+  assert(
+    readCachedRates({ storage, now: () => BASE_TIME }) === undefined,
+    "corrupt cache must not be returned",
+  );
+  assert(storage.removals === 1, "corrupt cache must be removed");
+});
+
+Deno.test("readCachedRates discards a cache timestamped in the future", () => {
+  const storage = new FakeStorage([
+    [CACHE_KEY, cacheAt("2024-01-03T00:00:00.000Z")],
+  ]);
+
+  assert(
+    readCachedRates({ storage, now: () => BASE_TIME }) === undefined,
+    "future cache must not be returned",
+  );
+  assert(storage.removals === 1, "future cache must be removed");
+});
+
+Deno.test("needsRefresh and isStale use 12 and 24 hour thresholds", () => {
+  const at = (fetchedAt: string): LoadedRates => ({
+    ...CACHED_RATES,
+    fetchedAt,
+  });
+
+  // BASE_TIME is 2024-01-02T00:00Z.
+  const elevenHours = at("2024-01-01T13:00:00.000Z");
+  const thirteenHours = at("2024-01-01T11:00:00.000Z");
+  const exactlyOneDay = at("2024-01-01T00:00:00.000Z");
+  const overOneDay = at("2023-12-31T23:59:00.000Z");
+
+  assert(!needsRefresh(elevenHours, BASE_TIME), "11 h: no refresh");
+  assert(needsRefresh(thirteenHours, BASE_TIME), "13 h: refresh");
+  assert(!isStale(thirteenHours, BASE_TIME), "13 h: not stale");
+  assert(!isStale(exactlyOneDay, BASE_TIME), "24 h: not yet stale");
+  assert(isStale(overOneDay, BASE_TIME), "over 24 h: stale");
+});
+
+Deno.test("fetchRates saves validated rates with a new timestamp", async () => {
   const storage = new FakeStorage([
     [CACHE_KEY, cacheAt("2024-01-01T00:00:00.000Z")],
   ]);
   const refreshed = { base: "EUR", rates: { USD: 1.25, JPY: 200 } };
   const fetchFn = (() => Promise.resolve(response(refreshed))) as typeof fetch;
 
-  const loaded = await loadRates({ storage, fetchFn, now: () => BASE_TIME });
+  const fetched = await fetchRates({ storage, fetchFn, now: () => BASE_TIME });
 
-  assertEquals(loaded, {
+  assertEquals(fetched, {
     ...refreshed,
     fetchedAt: BASE_TIME.toISOString(),
-    isStale: false,
-  }, "refreshed rates");
-  assert(storage.writes === 1, "successful refresh must write once");
+  }, "fetched rates");
+  assert(storage.writes === 1, "successful fetch must write once");
   assertEquals(
     JSON.parse(storage.getItem(CACHE_KEY) ?? "null"),
     { ...refreshed, fetchedAt: BASE_TIME.toISOString() },
-    "stored refresh",
+    "stored rates",
   );
 });
 
-Deno.test("loadRates returns expired cache as stale after a network error", async () => {
-  const storage = new FakeStorage([
-    [CACHE_KEY, cacheAt("2024-01-01T00:00:00.000Z")],
-  ]);
+Deno.test("fetchRates leaves saved rates untouched when offline", async () => {
+  const saved = cacheAt("2023-06-01T00:00:00.000Z");
+  const storage = new FakeStorage([[CACHE_KEY, saved]]);
   const fetchFn = (() => Promise.reject(new Error("offline"))) as typeof fetch;
 
-  const loaded = await loadRates({ storage, fetchFn, now: () => BASE_TIME });
+  const error = await rejection(
+    fetchRates({ storage, fetchFn, now: () => BASE_TIME }),
+  );
 
-  assert(loaded.isStale, "expired fallback must be marked stale");
-  assertEquals(loaded.rates, CACHED_RATES.rates, "stale rates");
-  assert(storage.writes === 0, "stale fallback must not be rewritten");
+  assert(error instanceof Error, "offline fetch must reject");
+  assert(storage.writes === 0 && storage.removals === 0, "cache untouched");
+  assert(storage.getItem(CACHE_KEY) === saved, "saved rates kept");
 });
 
-Deno.test("loadRates throws RatesUnavailableError when offline without cache", async () => {
+Deno.test("fetchRates rejects error responses and invalid data", async () => {
   const storage = new FakeStorage();
-  const fetchFn = (() => Promise.reject(new Error("offline"))) as typeof fetch;
-  let error: unknown;
+  const errorResponse =
+    (() => Promise.resolve(response({ error: "quota" }, 429))) as typeof fetch;
+  const invalidData = (() =>
+    Promise.resolve(
+      response({ base: "USD", rates: { EUR: -1 } }),
+    )) as typeof fetch;
 
-  try {
-    await loadRates({ storage, fetchFn, now: () => BASE_TIME });
-  } catch (caught) {
-    error = caught;
+  for (const fetchFn of [errorResponse, invalidData]) {
+    const error = await rejection(
+      fetchRates({ storage, fetchFn, now: () => BASE_TIME }),
+    );
+    assert(error instanceof Error, "bad response must reject");
   }
-
-  assert(
-    error instanceof RatesUnavailableError,
-    "expected RatesUnavailableError",
-  );
+  assert(storage.writes === 0, "bad responses must not be cached");
 });
 
-Deno.test("loadRates discards poisoned cache and rejects non-ok response data", async () => {
-  const storage = new FakeStorage([
-    [CACHE_KEY, JSON.stringify({ fetchedAt: "2024-01-01T00:00:00Z" })],
-  ]);
+Deno.test("fetchRates gives up on a request that never answers", async () => {
+  const storage = new FakeStorage();
   const fetchFn =
-    (() =>
-      Promise.resolve(response({ error: "offline" }, 503))) as typeof fetch;
-  let error: unknown;
+    ((_input: unknown, init?: RequestInit) =>
+      new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener(
+          "abort",
+          () => reject(init.signal?.reason),
+        );
+      })) as typeof fetch;
 
-  try {
-    await loadRates({ storage, fetchFn, now: () => BASE_TIME });
-  } catch (caught) {
-    error = caught;
-  }
-
-  assert(error instanceof RatesUnavailableError, "non-ok response must fail");
-  assert(storage.removals === 1, "poisoned cache must be removed");
-  assert(storage.writes === 0, "error response must not be cached");
-  assert(
-    storage.getItem(CACHE_KEY) === null,
-    "error data must not be returned",
+  const error = await rejection(
+    fetchRates({ storage, fetchFn, now: () => BASE_TIME, timeoutMs: 10 }),
   );
-});
 
-Deno.test("loadRates rejects a cache timestamp from the future", async () => {
-  const storage = new FakeStorage([
-    [CACHE_KEY, cacheAt("2024-01-03T00:00:00.000Z")],
-  ]);
-  const fetched = { base: "GBP", rates: { USD: 1.3 } };
-  const fetchFn = (() => Promise.resolve(response(fetched))) as typeof fetch;
-
-  const loaded = await loadRates({ storage, fetchFn, now: () => BASE_TIME });
-
-  assertEquals(loaded.base, "GBP", "future cache must not be used");
-  assert(storage.removals === 1, "future cache must be removed");
-  assert(storage.writes === 1, "replacement rates must be cached");
+  assert(error instanceof Error, "hung request must time out");
 });
 
 Deno.test("convert handles identity, base, cross-rate, and missing currencies", () => {
