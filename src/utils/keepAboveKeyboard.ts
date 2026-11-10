@@ -49,7 +49,8 @@ export function keepAboveKeyboard(element: HTMLElement): () => void {
     }
   }
 
-  const keyboardIsOpen = viewport != null &&
+  const keyboardIsOpen =
+    viewport != null &&
     viewport.height < globalThis.innerHeight * KEYBOARD_OPEN_FRACTION;
   if (keyboardIsOpen) {
     reveal(visibleBottom());

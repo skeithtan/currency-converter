@@ -31,13 +31,14 @@ export function convert(
   const toRate = rateOf(to);
 
   if (
-    !Number.isFinite(value) || !isFinitePositiveNumber(fromRate) ||
+    !Number.isFinite(value) ||
+    !isFinitePositiveNumber(fromRate) ||
     !isFinitePositiveNumber(toRate)
   ) {
     return undefined;
   }
 
-  const result = value * toRate / fromRate;
+  const result = (value * toRate) / fromRate;
   return Number.isFinite(result) ? result : undefined;
 }
 
@@ -93,9 +94,8 @@ export async function fetchRates(
   const storage = deps.storage ?? localStorage;
   const fetchFn = deps.fetchFn ?? fetch;
   const now = deps.now ?? (() => new Date());
-  const appId = typeof OPEN_EXCHANGE_APP_ID === "undefined"
-    ? ""
-    : OPEN_EXCHANGE_APP_ID;
+  const appId =
+    typeof OPEN_EXCHANGE_APP_ID === "undefined" ? "" : OPEN_EXCHANGE_APP_ID;
 
   const response = await fetchFn(RATES_URL, {
     headers: { Authorization: `Token ${appId}` },
@@ -141,10 +141,13 @@ function isConversion(value: unknown): value is Conversion {
   }
 
   const rates = Object.entries(value.rates);
-  return rates.length > 0 &&
-    rates.every(([code, rate]) =>
-      CURRENCY_CODE_PATTERN.test(code) && isFinitePositiveNumber(rate)
-    );
+  return (
+    rates.length > 0 &&
+    rates.every(
+      ([code, rate]) =>
+        CURRENCY_CODE_PATTERN.test(code) && isFinitePositiveNumber(rate),
+    )
+  );
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

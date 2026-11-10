@@ -1,9 +1,12 @@
 import { Button, Grid, Typography, useTheme } from "@mui/material";
 import type SvgIcon from "@mui/material/SvgIcon";
 
-export function EmptyState(
-  { icon: Icon, emptyText, buttonText, onButtonClick }: EmptyStateProps,
-) {
+export function EmptyState({
+  icon: Icon,
+  emptyText,
+  buttonText,
+  onButtonClick,
+}: EmptyStateProps) {
   const theme = useTheme();
 
   return (
@@ -17,15 +20,11 @@ export function EmptyState(
         justifyContent: "center",
       }}
     >
-      {Icon &&
-        (
-          <Grid>
-            <Icon
-              fontSize="large"
-              sx={{ color: theme.palette.text.secondary }}
-            />
-          </Grid>
-        )}
+      {Icon && (
+        <Grid>
+          <Icon fontSize="large" sx={{ color: theme.palette.text.secondary }} />
+        </Grid>
+      )}
 
       <Grid size={{ xs: 10, sm: 8 }}>
         <Typography
@@ -37,14 +36,13 @@ export function EmptyState(
         </Typography>
       </Grid>
 
-      {buttonText &&
-        (
-          <Grid>
-            <Button onClick={onButtonClick} variant="outlined">
-              {buttonText}
-            </Button>
-          </Grid>
-        )}
+      {buttonText && (
+        <Grid>
+          <Button onClick={onButtonClick} variant="outlined">
+            {buttonText}
+          </Button>
+        </Grid>
+      )}
     </Grid>
   );
 }

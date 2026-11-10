@@ -16,7 +16,7 @@ import {
  */
 export function useRates() {
   const [rates, setRates] = useState<LoadedRates | undefined>(() =>
-    readCachedRates()
+    readCachedRates(),
   );
   // Re-evaluated on resume so staleness is noticed in a long-lived session.
   const [now, setNow] = useState(() => new Date());

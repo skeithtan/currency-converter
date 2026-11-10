@@ -39,7 +39,7 @@ export function serviceWorkerPlugin(templatePath: string): Plugin {
       // The app shell is cached under the scope URL ("./"), which is what
       // GitHub Pages serves index.html at and what the manifest start_url is.
       const precachePaths = files.map((file) =>
-        file === "index.html" ? "./" : file
+        file === "index.html" ? "./" : file,
       );
 
       const header = [

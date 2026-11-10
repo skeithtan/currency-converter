@@ -1,16 +1,14 @@
 import { Grid, ListItemButton, ListItemText, Typography } from "@mui/material";
 import type { SearchSuggestionData } from "../types/SearchSuggestionData.ts";
 
-export function SearchSuggestionRow(
-  { suggestion, alreadyAdded, onClick }: SearchSuggestionRowProps,
-) {
+export function SearchSuggestionRow({
+  suggestion,
+  alreadyAdded,
+  onClick,
+}: SearchSuggestionRowProps) {
   const { emoji, symbol, code, name } = suggestion;
   return (
-    <ListItemButton
-      divider
-      onClick={onClick}
-      disabled={alreadyAdded}
-    >
+    <ListItemButton divider onClick={onClick} disabled={alreadyAdded}>
       <Grid
         container
         sx={{

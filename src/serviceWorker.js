@@ -101,12 +101,10 @@ async function assertShellIsComplete(cache) {
   if (!shell) throw new Error("App shell missing from precache");
 
   const html = await shell.text();
-  const referenced = [
-    ...html.matchAll(/(?:src|href)\s*=\s*["']([^"']+)["']/g),
-  ]
+  const referenced = [...html.matchAll(/(?:src|href)\s*=\s*["']([^"']+)["']/g)]
     .map((match) => new URL(match[1], scopeUrl))
-    .filter((url) =>
-      url.origin === scopeUrl.origin && url.href.startsWith(shellUrl)
+    .filter(
+      (url) => url.origin === scopeUrl.origin && url.href.startsWith(shellUrl),
     )
     .map((url) => url.href);
 

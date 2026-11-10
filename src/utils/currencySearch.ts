@@ -33,8 +33,7 @@ let indexedCurrencies: IndexedCurrency[] | undefined;
 
 export function getPopularCurrencies(): SearchSuggestionData[] {
   const currencies = getIndexedCurrencies();
-  return POPULAR_CODES
-    .map((code) => currencies.find((c) => c.code === code))
+  return POPULAR_CODES.map((code) => currencies.find((c) => c.code === code))
     .filter((c): c is IndexedCurrency => c != null)
     .map(toSuggestion);
 }
@@ -54,8 +53,9 @@ export function searchCurrencies(query: string): SearchSuggestionData[] {
   }
 
   // Sort by score desc, then alphabetically by code for stability
-  scored.sort((a, b) =>
-    b.score - a.score || a.currency.code.localeCompare(b.currency.code)
+  scored.sort(
+    (a, b) =>
+      b.score - a.score || a.currency.code.localeCompare(b.currency.code),
   );
 
   return scored.map(({ currency }) => toSuggestion(currency));

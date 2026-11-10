@@ -35,7 +35,9 @@ export function App() {
   const theme = useTheme();
   const { rates, now, getRates } = useRates();
   const showSearch = isAddingCurrency || currencyRows.length === 0;
-  const showStaleNotice = rates != null && isStale(rates, now) &&
+  const showStaleNotice =
+    rates != null &&
+    isStale(rates, now) &&
     dismissedStaleFetchedAt !== rates.fetchedAt;
 
   // When fresh rates arrive in the background, update the displayed values.
@@ -44,7 +46,7 @@ export function App() {
     if (!rates || rates.fetchedAt === appliedFetchedAtRef.current) return;
     appliedFetchedAtRef.current = rates.fetchedAt;
     setCurrencyRows((rows) =>
-      reconvertFromAnchor(rows, anchorCodeRef.current, rates)
+      reconvertFromAnchor(rows, anchorCodeRef.current, rates),
     );
   }, [rates]);
 
@@ -95,8 +97,8 @@ export function App() {
       if (value != null) {
         setCurrencyRows((rows) =>
           rows.map((row) =>
-            row.code === code ? { ...row, value: value.toFixed(2) } : row
-          )
+            row.code === code ? { ...row, value: value.toFixed(2) } : row,
+          ),
         );
       }
     } catch {
@@ -113,8 +115,8 @@ export function App() {
 
     setCurrencyRows((rows) =>
       rows.map((r) =>
-        r.code === row.code ? { ...r, value: newValue.toString() } : r
-      )
+        r.code === row.code ? { ...r, value: newValue.toString() } : r,
+      ),
     );
     anchorCodeRef.current = row.code;
     setConvertingCode(row.code);
@@ -178,26 +180,24 @@ export function App() {
               },
             }}
           >
-            {!showSearch &&
-              (
-                <CurrencyList
-                  currencyRows={currencyRows}
-                  convertingCode={convertingCode}
-                  onAddCurrencyClick={() => setIsAddingCurrency(true)}
-                  onRowValueChange={handleRowValueChange}
-                  onRemoveRow={handleRemoveRow}
-                  onReorder={setCurrencyRows}
-                />
-              )}
+            {!showSearch && (
+              <CurrencyList
+                currencyRows={currencyRows}
+                convertingCode={convertingCode}
+                onAddCurrencyClick={() => setIsAddingCurrency(true)}
+                onRowValueChange={handleRowValueChange}
+                onRemoveRow={handleRemoveRow}
+                onReorder={setCurrencyRows}
+              />
+            )}
 
-            {showSearch &&
-              (
-                <AddCurrencyView
-                  onFinish={() => setIsAddingCurrency(false)}
-                  onAddRow={handleAddRow}
-                  currencyRows={currencyRows}
-                />
-              )}
+            {showSearch && (
+              <AddCurrencyView
+                onFinish={() => setIsAddingCurrency(false)}
+                onAddRow={handleAddRow}
+                currencyRows={currencyRows}
+              />
+            )}
 
             {!showSearch && rates != null && (
               <StaleRatesNotice
@@ -229,9 +229,7 @@ function sanitizeCurrencyRows(value: unknown): CurrencyRowData[] {
   if (!Array.isArray(value)) return [];
 
   return value.flatMap((entry): CurrencyRowData[] => {
-    if (
-      typeof entry !== "object" || entry === null || Array.isArray(entry)
-    ) {
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
       return [];
     }
 

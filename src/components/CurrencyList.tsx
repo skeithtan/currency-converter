@@ -33,9 +33,8 @@ export function CurrencyList({
   }, [currencyRows.length, isEditing]);
 
   function handleDragEnd(result: DropResult) {
-    if (
-      !result.destination || result.destination.index === result.source.index
-    ) return;
+    if (!result.destination || result.destination.index === result.source.index)
+      return;
     const newRows = Array.from(currencyRows);
     const [removed] = newRows.splice(result.source.index, 1);
     newRows.splice(result.destination.index, 0, removed);
@@ -159,11 +158,14 @@ export function CurrencyList({
                             emoji={row.emoji}
                             symbol={row.symbol}
                             value={row.value}
-                            isLoading={convertingCode !== null &&
-                              convertingCode !== row.code}
+                            isLoading={
+                              convertingCode !== null &&
+                              convertingCode !== row.code
+                            }
                             isEditing={isEditing}
                             onValueChange={(newValue) =>
-                              onRowValueChange(row, newValue)}
+                              onRowValueChange(row, newValue)
+                            }
                             onRemove={() => onRemoveRow(row)}
                           />
                         </div>
@@ -192,8 +194,7 @@ export function CurrencyList({
               left: 0,
               right: 0,
               height: 32,
-              background:
-                `linear-gradient(to bottom, transparent, ${theme.palette.background.default})`,
+              background: `linear-gradient(to bottom, transparent, ${theme.palette.background.default})`,
               pointerEvents: "none",
             }}
           />

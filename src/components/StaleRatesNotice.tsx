@@ -9,9 +9,12 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * A slim, dismissible bar noting that the rates in use are more than a day
  * old. It sits below the list rather than over it and never interrupts input.
  */
-export function StaleRatesNotice(
-  { open, fetchedAt, now, onDismiss }: StaleRatesNoticeProps,
-) {
+export function StaleRatesNotice({
+  open,
+  fetchedAt,
+  now,
+  onDismiss,
+}: StaleRatesNoticeProps) {
   const theme = useTheme();
   const fetchedDate = new Date(fetchedAt);
   const days = Math.max(
@@ -52,8 +55,8 @@ export function StaleRatesNotice(
           sx={{ color: theme.palette.warning.main }}
         />
         <Typography variant="body2" sx={{ flex: 1 }} title={exactDate}>
-          Rates are {days === 1 ? "1 day" : `${days} days`}{" "}
-          old and may be outdated
+          Rates are {days === 1 ? "1 day" : `${days} days`} old and may be
+          outdated
         </Typography>
         <IconButton
           size="small"

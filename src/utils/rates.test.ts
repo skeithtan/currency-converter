@@ -156,8 +156,8 @@ test("fetchRates leaves saved rates untouched when offline", async () => {
 
 test("fetchRates rejects error responses and invalid data", async () => {
   const storage = new FakeStorage();
-  const errorResponse =
-    (() => Promise.resolve(response({ error: "quota" }, 429))) as typeof fetch;
+  const errorResponse = (() =>
+    Promise.resolve(response({ error: "quota" }, 429))) as typeof fetch;
   const invalidData = (() =>
     Promise.resolve(
       response({ base: "USD", rates: { EUR: -1 } }),
@@ -175,18 +175,17 @@ test("fetchRates rejects error responses and invalid data", async () => {
 
 test("fetchRates gives up on a request that never answers", async () => {
   const storage = new FakeStorage();
-  const fetchFn =
-    ((_input: unknown, init?: RequestInit) =>
-      new Promise((_resolve, reject) => {
-        // A real pending request holds a socket open. Without an equivalent
-        // handle Node would exit before AbortSignal.timeout(), whose timer
-        // does not keep the process alive, gets to fire.
-        const pending = setInterval(() => {}, 1_000);
-        init?.signal?.addEventListener("abort", () => {
-          clearInterval(pending);
-          reject(init.signal?.reason);
-        });
-      })) as typeof fetch;
+  const fetchFn = ((_input: unknown, init?: RequestInit) =>
+    new Promise((_resolve, reject) => {
+      // A real pending request holds a socket open. Without an equivalent
+      // handle Node would exit before AbortSignal.timeout(), whose timer
+      // does not keep the process alive, gets to fire.
+      const pending = setInterval(() => {}, 1_000);
+      init?.signal?.addEventListener("abort", () => {
+        clearInterval(pending);
+        reject(init.signal?.reason);
+      });
+    })) as typeof fetch;
 
   await assert.rejects(
     fetchRates({ storage, fetchFn, now: () => BASE_TIME, timeoutMs: 10 }),

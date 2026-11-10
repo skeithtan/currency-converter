@@ -23,9 +23,11 @@ import EuroSymbolIcon from "@mui/icons-material/EuroSymbol";
 import { EmptyState } from "./EmptyState.tsx";
 import { searchCurrencies } from "../utils/currencySearch.ts";
 
-export function AddCurrencyView(
-  { onFinish, onAddRow, currencyRows }: AddCurrencyViewProps,
-) {
+export function AddCurrencyView({
+  onFinish,
+  onAddRow,
+  currencyRows,
+}: AddCurrencyViewProps) {
   const [searchValue, setSearchValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(undefined);
   const theme = useTheme();
@@ -56,8 +58,8 @@ export function AddCurrencyView(
     }
 
     const suggestion = suggestions[0];
-    const alreadyAdded = currencyRows.some((row) =>
-      row.code === suggestion.code
+    const alreadyAdded = currencyRows.some(
+      (row) => row.code === suggestion.code,
     );
 
     if (alreadyAdded) {
@@ -88,7 +90,9 @@ export function AddCurrencyView(
           }}
         >
           {currencyRows.length > 0 && (
-            <Button onClick={handleFinish} color="inherit">Cancel</Button>
+            <Button onClick={handleFinish} color="inherit">
+              Cancel
+            </Button>
           )}
           <Typography
             variant="h4"
@@ -116,7 +120,8 @@ export function AddCurrencyView(
           placeholder="Search currency codes"
           value={searchValue}
           onChange={(event: ChangeEvent<HTMLInputElement>) =>
-            setSearchValue(event.target.value)}
+            setSearchValue(event.target.value)
+          }
           onKeyDown={handleSearchBarKeyDown}
           startAdornment={
             <InputAdornment position="start">
@@ -130,8 +135,8 @@ export function AddCurrencyView(
           <SearchSuggestionRow
             key={suggestion.code}
             suggestion={suggestion}
-            alreadyAdded={currencyRows.some((row) =>
-              row.code === suggestion.code
+            alreadyAdded={currencyRows.some(
+              (row) => row.code === suggestion.code,
             )}
             onClick={() => {
               onAddRow(suggestion);
@@ -143,9 +148,11 @@ export function AddCurrencyView(
         {suggestions.length === 0 && (
           <EmptyState
             icon={searchValue.length === 0 ? EuroSymbolIcon : SearchIcon}
-            emptyText={searchValue.length === 0
-              ? "Type a currency code to see the search results"
-              : `No results for "${searchValue}"`}
+            emptyText={
+              searchValue.length === 0
+                ? "Type a currency code to see the search results"
+                : `No results for "${searchValue}"`
+            }
           />
         )}
       </Box>

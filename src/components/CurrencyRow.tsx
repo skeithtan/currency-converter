@@ -77,9 +77,7 @@ export function CurrencyRow({
       focusAndOpenKeyboard(inputRef.current);
       if (rowRef.current) {
         stopKeepingAboveKeyboard();
-        stopKeepingAboveKeyboardRef.current = keepAboveKeyboard(
-          rowRef.current,
-        );
+        stopKeepingAboveKeyboardRef.current = keepAboveKeyboard(rowRef.current);
       }
     }
   }
@@ -114,10 +112,7 @@ export function CurrencyRow({
           flexWrap: "nowrap",
         }}
       >
-        <Grid
-          container
-          sx={{ alignItems: "center", flexWrap: "nowrap" }}
-        >
+        <Grid container sx={{ alignItems: "center", flexWrap: "nowrap" }}>
           <Box
             sx={{
               display: "flex",
@@ -131,20 +126,14 @@ export function CurrencyRow({
           >
             <DragIndicatorIcon color="action" sx={{ cursor: "grab" }} />
           </Box>
-          <Typography
-            variant="h6"
-            sx={{ mr: 3, whiteSpace: "nowrap" }}
-          >
+          <Typography variant="h6" sx={{ mr: 3, whiteSpace: "nowrap" }}>
             {emoji ?? "💰"} {code}
           </Typography>
         </Grid>
 
         {isLoading && (
           <Grid size={{ xs: 6 }}>
-            <Skeleton
-              variant="text"
-              sx={{ fontSize: "2rem" }}
-            />
+            <Skeleton variant="text" sx={{ fontSize: "2rem" }} />
           </Grid>
         )}
 
@@ -161,10 +150,7 @@ export function CurrencyRow({
         <Fade in={!isLoading && !isEditing} unmountOnExit>
           <Grid size={{ xs: 8 }}>
             {!isUpdatingValue && (
-              <Typography
-                variant="h5"
-                align="right"
-              >
+              <Typography variant="h5" align="right">
                 {formattedNumber}
               </Typography>
             )}
@@ -177,7 +163,8 @@ export function CurrencyRow({
               inputRef={inputRef}
               value={inputValue}
               onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                setInputValue(event.target.value)}
+                setInputValue(event.target.value)
+              }
               onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
                 if (event.key === "Enter") {
                   endUpdatingValue();

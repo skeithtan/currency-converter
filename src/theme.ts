@@ -16,7 +16,7 @@ export function useTheme(): Theme {
           },
           background: {
             default: prefersDarkMode ? "#000" : "#fff",
-            ...!prefersDarkMode && { paper: "#f3f2f7" },
+            ...(!prefersDarkMode && { paper: "#f3f2f7" }),
           },
         },
         typography: {
