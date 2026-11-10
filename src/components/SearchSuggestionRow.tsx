@@ -1,5 +1,5 @@
 import { Grid, ListItemButton, ListItemText, Typography } from "@mui/material";
-import { SearchSuggestionData } from "../types/SearchSuggestionData.ts";
+import type { SearchSuggestionData } from "../types/SearchSuggestionData.ts";
 
 export function SearchSuggestionRow(
   { suggestion, alreadyAdded, onClick }: SearchSuggestionRowProps,

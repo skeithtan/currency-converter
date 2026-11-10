@@ -9,11 +9,8 @@ export interface CurrencyInfo {
 }
 
 const CURRENCY_CODE_PATTERN = /^[A-Z]{3}$/;
-const emojis = currencyEmojiFlags.currencyData as Record<
-  string,
-  string | undefined
->;
-const symbols = currencySymbolMap as Record<string, string | undefined>;
+const emojis = currencyEmojiFlags.currencyData;
+const symbols = currencySymbolMap;
 const displayNames = createDisplayNames();
 let currencies: CurrencyInfo[] | undefined;
 

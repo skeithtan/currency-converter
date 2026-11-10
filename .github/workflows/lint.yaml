@@ -16,22 +16,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          deno-version: v2.x
+          node-version-file: .nvmrc
+          cache: npm
 
       - name: Install dependencies
-        run: deno install
+        run: npm ci
 
-      - name: Verify formatting
-        run: deno fmt --check
-
-      - name: Run linter
-        run: deno lint
+      - name: Verify formatting and run linter
+        run: npx biome ci
 
       - name: Run type check
-        run: deno check .
+        run: npm run typecheck
 
       - name: Run tests
-        run: deno task test
+        run: npm test

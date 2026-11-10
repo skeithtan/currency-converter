@@ -1,5 +1,5 @@
 import { Button, Grid, Typography, useTheme } from "@mui/material";
-import SvgIcon from "@mui/material/SvgIcon";
+import type SvgIcon from "@mui/material/SvgIcon";
 
 export function EmptyState(
   { icon: Icon, emptyText, buttonText, onButtonClick }: EmptyStateProps,

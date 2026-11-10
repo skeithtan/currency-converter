@@ -27,13 +27,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          deno-version: v2.x
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build app
-        run: deno task build
+        run: npm run build
         env:
           OPEN_EXCHANGE_APP_ID: ${{ secrets.OPEN_EXCHANGE_APP_ID }}
 

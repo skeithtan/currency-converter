@@ -10,8 +10,8 @@ import {
   Typography,
 } from "@mui/material";
 import {
-  ChangeEvent,
-  KeyboardEvent,
+  type ChangeEvent,
+  type KeyboardEvent,
   useEffect,
   useMemo,
   useRef,
@@ -57,7 +57,13 @@ export function CurrencyRow({
   }
 
   // Restore the list if the row disappears while it is being edited.
-  useEffect(() => stopKeepingAboveKeyboard, []);
+  useEffect(
+    () => () => {
+      stopKeepingAboveKeyboardRef.current?.();
+      stopKeepingAboveKeyboardRef.current = null;
+    },
+    [],
+  );
 
   function handleClick() {
     // Taps inside the open input (e.g. to move the caret) bubble up here;

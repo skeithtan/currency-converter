@@ -1,4 +1,4 @@
-import { createTheme, Theme, useMediaQuery } from "@mui/material";
+import { createTheme, type Theme, useMediaQuery } from "@mui/material";
 import React, { useEffect } from "react";
 
 export function useTheme(): Theme {
@@ -63,7 +63,7 @@ export function useTheme(): Theme {
 
   useEffect(() => {
     setMetaThemeColor(theme.palette.primary.main);
-  }, [prefersDarkMode, theme.palette.primary.main]);
+  }, [theme.palette.primary.main]);
 
   return theme;
 }

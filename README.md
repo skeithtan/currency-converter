@@ -2,11 +2,12 @@
 
 Vert is an installable, offline-capable PWA for converting between currencies,
 with rates from [openexchangerates.org](https://openexchangerates.org), built
-with Deno, Vite, React, and MUI, and deployed to GitHub Pages.
+with Vite, React, and MUI, and deployed to GitHub Pages.
 
 ## Requirements
 
-Deno 2.x
+Node.js 22.18 or later. `.nvmrc` pins the version CI uses (26, the current
+LTS), so `nvm use` or `fnm use` selects it.
 
 ## Setup
 
@@ -20,10 +21,24 @@ OPEN_EXCHANGE_APP_ID=<your app id>
 ## Development
 
 ```sh
-deno task dev
-deno task build
-deno task preview
+npm install
+npm run dev        # start the dev server
+npm run build      # build to dist/
+npm run preview    # serve the build locally
 ```
+
+## Checks
+
+```sh
+npm test           # unit tests (Node's built-in test runner)
+npm run typecheck  # TypeScript
+npm run lint       # Biome formatting and lint check
+npm run fix        # apply Biome formatting and safe fixes
+```
+
+Tests run TypeScript directly through Node's type stripping, so test files and
+everything they import must use `import type` for type-only imports and avoid
+TypeScript-only runtime syntax such as enums. The type check enforces both.
 
 ## Offline support
 

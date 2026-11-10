@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Container, Paper, Snackbar, ThemeProvider } from "@mui/material";
-import { Theme } from "@mui/material/styles";
+import type { Theme } from "@mui/material/styles";
 import { useTheme } from "./theme.ts";
 import { CurrencyList } from "./components/CurrencyList.tsx";
 import { AddCurrencyView } from "./components/AddCurrencyView.tsx";
-import { CurrencyRowData } from "./types/CurrencyRowData.ts";
-import { SearchSuggestionData } from "./types/SearchSuggestionData.ts";
+import type { CurrencyRowData } from "./types/CurrencyRowData.ts";
+import type { SearchSuggestionData } from "./types/SearchSuggestionData.ts";
 import { StaleRatesNotice } from "./components/StaleRatesNotice.tsx";
 import { useRates } from "./hooks/useRates.ts";
 import { convert, isStale, type LoadedRates } from "./utils/rates.ts";
@@ -107,7 +107,7 @@ export function App() {
   }
 
   async function handleRowValueChange(row: CurrencyRowData, newValue: number) {
-    if (isNaN(newValue)) {
+    if (Number.isNaN(newValue)) {
       return;
     }
 

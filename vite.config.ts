@@ -1,12 +1,13 @@
-/// <reference lib="deno.ns" />
-import { defineConfig } from "vite";
-import deno from "@deno/vite-plugin";
+import { fileURLToPath } from "node:url";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { serviceWorkerPlugin } from "./plugins/serviceWorkerPlugin.ts";
 
 // https://vite.dev/config/
-export default defineConfig(({ command }) => {
-  const appId = Deno.env.get("OPEN_EXCHANGE_APP_ID");
+export default defineConfig(({ command, mode }) => {
+  // Reads .env files and the process environment (which takes precedence).
+  // The empty prefix loads variables without the VITE_ prefix.
+  const appId = loadEnv(mode, process.cwd(), "").OPEN_EXCHANGE_APP_ID;
 
   if (command === "build" && !appId) {
     throw new Error(
@@ -16,10 +17,9 @@ export default defineConfig(({ command }) => {
 
   return {
     plugins: [
-      deno(),
       react(),
       serviceWorkerPlugin(
-        new URL("./src/serviceWorker.js", import.meta.url).pathname,
+        fileURLToPath(new URL("./src/serviceWorker.js", import.meta.url)),
       ),
     ],
     base: "/currency-converter/",

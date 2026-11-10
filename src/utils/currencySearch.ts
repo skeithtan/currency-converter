@@ -1,4 +1,4 @@
-import { SearchSuggestionData } from "../types/SearchSuggestionData.ts";
+import type { SearchSuggestionData } from "../types/SearchSuggestionData.ts";
 import { getAllCurrencies } from "./currencies.ts";
 
 interface IndexedCurrency {

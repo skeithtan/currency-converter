@@ -7,17 +7,17 @@ import {
   useTheme,
 } from "@mui/material";
 import {
-  ChangeEvent,
-  KeyboardEvent,
+  type ChangeEvent,
+  type KeyboardEvent,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
 import SearchIcon from "@mui/icons-material/Search";
-import { CurrencyRowData } from "../types/CurrencyRowData.ts";
+import type { CurrencyRowData } from "../types/CurrencyRowData.ts";
 import { SearchSuggestionRow } from "./SearchSuggestionRow.tsx";
-import { SearchSuggestionData } from "../types/SearchSuggestionData.ts";
+import type { SearchSuggestionData } from "../types/SearchSuggestionData.ts";
 import { focusAndOpenKeyboard } from "../utils/focusAndOpenKeyboard.ts";
 import EuroSymbolIcon from "@mui/icons-material/EuroSymbol";
 import { EmptyState } from "./EmptyState.tsx";

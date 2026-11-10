@@ -1,4 +1,4 @@
-import "@fontsource-variable/ibm-plex-sans";
+import "@fontsource-variable/ibm-plex-sans/index.css";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { App } from "./App.tsx";
@@ -22,7 +22,7 @@ if (!import.meta.env.DEV && "serviceWorker" in navigator) {
 async function registerServiceWorker() {
   try {
     const registration = await navigator.serviceWorker.register(
-      import.meta.env.BASE_URL + "sw.js",
+      `${import.meta.env.BASE_URL}sw.js`,
       { updateViaCache: "none" },
     );
 

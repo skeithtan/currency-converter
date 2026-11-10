@@ -2,7 +2,7 @@ import { Box, Button, Fade, Grid, Typography, useTheme } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { CurrencyRow } from "./CurrencyRow.tsx";
 import { useEffect, useState } from "react";
-import { CurrencyRowData } from "../types/CurrencyRowData.ts";
+import type { CurrencyRowData } from "../types/CurrencyRowData.ts";
 import { EmptyState } from "./EmptyState.tsx";
 import { SCROLL_CONTAINER_ATTRIBUTE } from "../utils/keepAboveKeyboard.ts";
 import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
@@ -10,7 +10,7 @@ import {
   DragDropContext,
   Draggable,
   Droppable,
-  DropResult,
+  type DropResult,
 } from "@hello-pangea/dnd";
 
 export function CurrencyList({
@@ -39,7 +39,7 @@ export function CurrencyList({
     const newRows = Array.from(currencyRows);
     const [removed] = newRows.splice(result.source.index, 1);
     newRows.splice(result.destination.index, 0, removed);
-    onReorder && onReorder(newRows);
+    onReorder?.(newRows);
   }
 
   return (
