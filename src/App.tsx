@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Container, Paper, Snackbar, ThemeProvider } from "@mui/material";
 import { Theme } from "@mui/material/styles";
 import { useTheme } from "./theme.ts";
@@ -6,7 +6,9 @@ import { CurrencyList } from "./components/CurrencyList.tsx";
 import { AddCurrencyView } from "./components/AddCurrencyView.tsx";
 import { CurrencyRowData } from "./types/CurrencyRowData.ts";
 import { SearchSuggestionData } from "./types/SearchSuggestionData.ts";
-import { convert, loadRates, RatesUnavailableError } from "./utils/rates.ts";
+import { StaleRatesNotice } from "./components/StaleRatesNotice.tsx";
+import { useRates } from "./hooks/useRates.ts";
+import { convert, isStale, type LoadedRates } from "./utils/rates.ts";
 
 export function App() {
   const [isAddingCurrency, setIsAddingCurrency] = useState(false);
@@ -24,9 +26,27 @@ export function App() {
   });
   const [convertingCode, setConvertingCode] = useState<string | null>(null);
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+  const [dismissedStaleFetchedAt, setDismissedStaleFetchedAt] = useState<
+    string | null
+  >(null);
+  // The row the user last typed into; refreshed rates are applied from it.
+  const anchorCodeRef = useRef<string | null>(null);
 
   const theme = useTheme();
+  const { rates, now, getRates } = useRates();
   const showSearch = isAddingCurrency || currencyRows.length === 0;
+  const showStaleNotice = rates != null && isStale(rates, now) &&
+    dismissedStaleFetchedAt !== rates.fetchedAt;
+
+  // When fresh rates arrive in the background, update the displayed values.
+  const appliedFetchedAtRef = useRef(rates?.fetchedAt);
+  useEffect(() => {
+    if (!rates || rates.fetchedAt === appliedFetchedAtRef.current) return;
+    appliedFetchedAtRef.current = rates.fetchedAt;
+    setCurrencyRows((rows) =>
+      reconvertFromAnchor(rows, anchorCodeRef.current, rates)
+    );
+  }, [rates]);
 
   useEffect(() => {
     localStorage.removeItem("currencies");
@@ -65,7 +85,7 @@ export function App() {
     setConvertingCode(baseRow.code);
 
     try {
-      const rates = await loadRates();
+      const rates = await getRates();
       const value = convert(
         parseFloat(baseRow.value ?? "0"),
         baseRow.code,
@@ -79,19 +99,8 @@ export function App() {
           )
         );
       }
-      if (rates.isStale) {
-        setSnackbarMessage(
-          `Offline — using saved rates from ${
-            new Date(rates.fetchedAt).toLocaleDateString()
-          }`,
-        );
-      }
-    } catch (error) {
-      setSnackbarMessage(
-        error instanceof RatesUnavailableError
-          ? "You're offline and no saved rates are available yet"
-          : "Couldn't update rates",
-      );
+    } catch {
+      setSnackbarMessage(NO_RATES_MESSAGE);
     } finally {
       setConvertingCode(null);
     }
@@ -107,30 +116,14 @@ export function App() {
         r.code === row.code ? { ...r, value: newValue.toString() } : r
       )
     );
+    anchorCodeRef.current = row.code;
     setConvertingCode(row.code);
 
     try {
-      const rates = await loadRates();
-      setCurrencyRows((rows) =>
-        rows.map((r) => {
-          if (r.code === row.code) return r;
-          const value = convert(newValue, row.code, r.code, rates);
-          return value == null ? r : { ...r, value: value.toFixed(2) };
-        })
-      );
-      if (rates.isStale) {
-        setSnackbarMessage(
-          `Offline — using saved rates from ${
-            new Date(rates.fetchedAt).toLocaleDateString()
-          }`,
-        );
-      }
-    } catch (error) {
-      setSnackbarMessage(
-        error instanceof RatesUnavailableError
-          ? "You're offline and no saved rates are available yet"
-          : "Couldn't update rates",
-      );
+      const rates = await getRates();
+      setCurrencyRows((rows) => reconvertFromAnchor(rows, row.code, rates));
+    } catch {
+      setSnackbarMessage(NO_RATES_MESSAGE);
     } finally {
       setConvertingCode(null);
     }
@@ -205,6 +198,15 @@ export function App() {
                   currencyRows={currencyRows}
                 />
               )}
+
+            {!showSearch && rates != null && (
+              <StaleRatesNotice
+                open={showStaleNotice}
+                fetchedAt={rates.fetchedAt}
+                now={now}
+                onDismiss={() => setDismissedStaleFetchedAt(rates.fetchedAt)}
+              />
+            )}
           </Paper>
         </Container>
       </Container>
@@ -219,6 +221,8 @@ export function App() {
 }
 
 const LOCALSTORAGE_KEY = "currencyRows";
+const NO_RATES_MESSAGE =
+  "Couldn't load exchange rates. Connect to the internet and try again.";
 const CURRENCY_CODE_PATTERN = /^[A-Z]{3}$/;
 
 function sanitizeCurrencyRows(value: unknown): CurrencyRowData[] {
@@ -244,5 +248,27 @@ function sanitizeCurrencyRows(value: unknown): CurrencyRowData[] {
     if (typeof storedRow.symbol === "string") row.symbol = storedRow.symbol;
     if (typeof storedRow.value === "string") row.value = storedRow.value;
     return [row];
+  });
+}
+
+/**
+ * Recomputes every row from the anchor row (the one last typed into, else the
+ * first row), leaving the anchor's own value untouched.
+ */
+function reconvertFromAnchor(
+  rows: CurrencyRowData[],
+  anchorCode: string | null,
+  rates: LoadedRates,
+): CurrencyRowData[] {
+  const anchor = rows.find((row) => row.code === anchorCode) ?? rows[0];
+  if (!anchor) return rows;
+
+  const anchorValue = parseFloat(anchor.value ?? "");
+  if (!Number.isFinite(anchorValue)) return rows;
+
+  return rows.map((row) => {
+    if (row.code === anchor.code) return row;
+    const value = convert(anchorValue, anchor.code, row.code, rates);
+    return value == null ? row : { ...row, value: value.toFixed(2) };
   });
 }
