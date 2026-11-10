@@ -1,148 +1,117 @@
-const CACHE_NAME = "vert-v3";
+// Service worker template. The build (plugins/serviceWorkerPlugin.ts) prepends
+// BUILD_VERSION and PRECACHE_PATHS and writes the result to dist/sw.js.
+//
+// Strategy: the whole build is precached at install into a cache named after
+// the build version, and every request for it is answered from that cache
+// without touching the network. Launching the installed app therefore never
+// waits on the network, whether offline, on a captive portal, or on a
+// connection that is technically up but not delivering anything.
+//
+// Updates arrive as a new sw.js (its contents change with every build). The
+// new worker downloads the complete new build in the background and only
+// takes over once all of it is cached, so the shell and its hashed assets
+// always come from the same build. The next launch shows the new version.
+
+/* global BUILD_VERSION, PRECACHE_PATHS */
+
+const CACHE_PREFIX = "vert-";
+const CACHE_NAME = `${CACHE_PREFIX}${BUILD_VERSION}`;
 const scopeUrl = new URL(self.registration.scope);
-const precacheList = [
-  scopeUrl.href,
-  new URL("manifest.webmanifest", scopeUrl).href,
-  new URL("favicon.ico", scopeUrl).href,
-  new URL("logo192.png", scopeUrl).href,
-  new URL("logo512.png", scopeUrl).href,
-];
+const shellUrl = scopeUrl.href;
+const precacheUrls = PRECACHE_PATHS.map((path) => new URL(path, scopeUrl).href);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_NAME);
-      await cache.addAll(precacheList);
-
-      const shellResponse = await cache.match(scopeUrl, { ignoreVary: true });
-      if (!shellResponse) throw new Error("Cached shell response not found");
-
-      const shellHtml = await shellResponse.text();
-      const assetUrls = [
-        ...shellHtml.matchAll(
-          /(?:src|href)\s*=\s*["']([^"']*\/assets\/[^"']+)["']/g,
-        ),
-      ].map((match) => new URL(match[1], scopeUrl).href);
-      const uncachedAssetUrls = [
-        ...new Set(assetUrls.filter((url) => !precacheList.includes(url))),
-      ];
-
-      await cache.addAll(uncachedAssetUrls);
-
-      const cssUrls = uncachedAssetUrls.filter((url) =>
-        new URL(url).pathname.endsWith(".css")
-      );
-      const fontUrls = new Set();
-
-      for (const cssUrl of cssUrls) {
-        const cssResponse = await cache.match(cssUrl, { ignoreVary: true });
-        if (!cssResponse) continue;
-
-        const css = await cssResponse.text();
-        for (
-          const match of css.matchAll(
-            /url\(\s*["']?([^"')]+\.woff2?)["']?\s*\)/g,
-          )
-        ) {
-          fontUrls.add(new URL(match[1], cssUrl).href);
-        }
+      try {
+        // Bypass the HTTP cache: GitHub Pages serves everything with
+        // max-age=600, so a cached index.html could belong to the previous
+        // deploy and reference assets this build does not contain.
+        await cache.addAll(
+          precacheUrls.map((url) => new Request(url, { cache: "reload" })),
+        );
+        await assertShellIsComplete(cache);
+      } catch (error) {
+        // Leave the previous, complete version in charge and retry on the
+        // next update check rather than activating a partial build.
+        await caches.delete(CACHE_NAME);
+        throw error;
       }
-
-      await Promise.allSettled(
-        [...fontUrls].map(async (fontUrl) => {
-          const response = await fetch(fontUrl);
-          if (response.ok) await cache.put(fontUrl, response);
-        }),
-      );
-
       await self.skipWaiting();
+    })(),
+  );
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+          .map((key) => caches.delete(key)),
+      );
+      await self.clients.claim();
     })(),
   );
 });
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
-
-  if (url.origin !== self.location.origin) return;
+  if (url.origin !== self.location.origin || !url.href.startsWith(shellUrl)) {
+    return;
+  }
 
   if (request.mode === "navigate") {
-    event.respondWith(networkFirstNavigation(request));
+    event.respondWith(fromCacheOrNetwork(shellUrl, request));
     return;
   }
 
-  if (url.pathname.includes("/assets/")) {
-    event.respondWith(cacheFirst(request));
-    return;
-  }
-
-  event.respondWith(staleWhileRevalidate(event));
+  event.respondWith(fromCacheOrNetwork(request, request));
 });
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys.filter((key) => key !== CACHE_NAME).map((key) =>
-            caches.delete(key)
-          ),
-        )
-      )
-      .then(() => self.clients.claim()),
-  );
-});
-
-async function networkFirstNavigation(request) {
+async function fromCacheOrNetwork(cacheKey, request) {
   const cache = await caches.open(CACHE_NAME);
-
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      await cache.put(scopeUrl, response.clone());
-    }
-    return response;
-  } catch {
-    return (await caches.match(scopeUrl, { ignoreVary: true })) ||
-      new Response("Offline", {
-        status: 503,
-        headers: { "Content-Type": "text/plain" },
-      });
-  }
-}
-
-async function cacheFirst(request) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request, { ignoreVary: true });
-
+  const cached = await cache.match(cacheKey, { ignoreVary: true });
   if (cached) return cached;
 
-  const response = await fetch(request);
-  if (response.ok) {
-    await cache.put(request, response.clone());
+  try {
+    return await fetch(request);
+  } catch (error) {
+    if (request.mode !== "navigate") throw error;
+    return new Response(
+      "Vert is offline and its files are not available on this device yet. " +
+        "Open it once while online.",
+      { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } },
+    );
   }
-  return response;
 }
 
-async function staleWhileRevalidate(event) {
-  const request = event.request;
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request, { ignoreVary: true });
-  const networkResponse = fetch(request).then(async (response) => {
-    if (response.ok) {
-      await cache.put(request, response.clone());
-    }
-    return response;
-  });
+/**
+ * Guards against a deploy race in which index.html already belongs to a newer
+ * build than this sw.js: every asset the shell references must be precached,
+ * or launching offline would load a shell whose scripts are missing.
+ */
+async function assertShellIsComplete(cache) {
+  const shell = await cache.match(shellUrl, { ignoreVary: true });
+  if (!shell) throw new Error("App shell missing from precache");
 
-  if (cached) {
-    event.waitUntil(networkResponse.then(() => undefined).catch(() => {}));
-    return cached;
+  const html = await shell.text();
+  const referenced = [
+    ...html.matchAll(/(?:src|href)\s*=\s*["']([^"']+)["']/g),
+  ]
+    .map((match) => new URL(match[1], scopeUrl))
+    .filter((url) =>
+      url.origin === scopeUrl.origin && url.href.startsWith(shellUrl)
+    )
+    .map((url) => url.href);
+
+  const missing = referenced.filter((url) => !precacheUrls.includes(url));
+  if (missing.length > 0) {
+    throw new Error(`App shell references uncached files: ${missing}`);
   }
-
-  return networkResponse;
 }

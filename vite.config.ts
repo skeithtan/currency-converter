@@ -2,6 +2,7 @@
 import { defineConfig } from "vite";
 import deno from "@deno/vite-plugin";
 import react from "@vitejs/plugin-react";
+import { serviceWorkerPlugin } from "./plugins/serviceWorkerPlugin.ts";
 
 // https://vite.dev/config/
 export default defineConfig(({ command }) => {
@@ -14,7 +15,13 @@ export default defineConfig(({ command }) => {
   }
 
   return {
-    plugins: [deno(), react()],
+    plugins: [
+      deno(),
+      react(),
+      serviceWorkerPlugin(
+        new URL("./src/serviceWorker.js", import.meta.url).pathname,
+      ),
+    ],
     base: "/currency-converter/",
     server: {
       allowedHosts: true,
