@@ -19,6 +19,7 @@ import {
 } from "react";
 import { RemoveCircleOutlined } from "@mui/icons-material";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import { createCurrencyFormatter } from "../utils/currencyFormat.ts";
 import { focusAndOpenKeyboard } from "../utils/focusAndOpenKeyboard.ts";
 import { keepAboveKeyboard } from "../utils/keepAboveKeyboard.ts";
 
@@ -37,16 +38,7 @@ export function CurrencyRow({
   const stopKeepingAboveKeyboardRef = useRef<(() => void) | null>(null);
   const [isUpdatingValue, setIsUpdatingValue] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const formatter = useMemo(
-    () =>
-      new Intl.NumberFormat(undefined, {
-        style: "currency",
-        currency: code,
-        currencyDisplay: "narrowSymbol",
-        useGrouping: true,
-      }),
-    [code],
-  );
+  const formatter = useMemo(() => createCurrencyFormatter(code), [code]);
   const formattedNumber = value
     ? formatter.format(parseFloat(value))
     : undefined;
