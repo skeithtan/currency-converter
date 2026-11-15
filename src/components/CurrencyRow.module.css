@@ -1,0 +1,195 @@
+.item {
+  position: relative;
+  background: var(--bg);
+  border-bottom: 1px solid var(--divider);
+  /* A long press lifts the row; it must not select text or open a callout. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.shifting {
+  transition: transform 180ms ease;
+}
+
+.lifted {
+  z-index: 2;
+  border-bottom-color: transparent;
+  border-radius: 12px;
+  box-shadow: var(--shadow-lifted);
+}
+
+.row {
+  width: 100%;
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px max(20px, env(safe-area-inset-right)) 10px
+    max(20px, env(safe-area-inset-left));
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+
+.row:active,
+.lifted .row {
+  background: var(--row-pressed);
+}
+
+@media (hover: hover) {
+  .row:hover {
+    background: var(--row-pressed);
+  }
+}
+
+.flag {
+  flex-shrink: 0;
+  width: 30px;
+  font-size: 26px;
+  line-height: 1;
+  text-align: center;
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.code {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.subtitle {
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.amount {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 62%;
+  overflow: hidden;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+
+/* Delayed, so conversions from saved rates never flicker. */
+.pending {
+  opacity: 0.35;
+  transition: opacity 0.2s 0.15s;
+}
+
+.editing {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px max(20px, env(safe-area-inset-right)) 14px
+    max(20px, env(safe-area-inset-left));
+  background: var(--row-active);
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.editTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.editLabel {
+  flex: 0 1 auto;
+  max-width: 42%;
+}
+
+.field {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  background: var(--field-bg);
+  cursor: text;
+}
+
+.symbol {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 18px;
+}
+
+.input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  text-align: right;
+}
+
+.input:focus-visible {
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.55;
+}
+
+.chips {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.chip {
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 16px;
+  font-weight: 600;
+  transition: background 0.12s;
+}
+
+.chip:active {
+  background: var(--accent-soft-pressed);
+}
+
+.chip[aria-disabled="true"] {
+  opacity: 0.5;
+}
+
+.chipWord {
+  font-size: 14px;
+  font-weight: 400;
+}

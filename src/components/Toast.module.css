@@ -1,0 +1,36 @@
+.region {
+  position: fixed;
+  right: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  padding: 0 16px;
+  pointer-events: none;
+}
+
+.toast {
+  max-width: 420px;
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--toast-bg);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lifted);
+  color: var(--toast-text);
+  font-size: 15px;
+  animation: pop-in 0.2s ease-out;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}

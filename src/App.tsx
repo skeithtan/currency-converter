@@ -1,44 +1,51 @@
-import { useEffect, useRef, useState } from "react";
-import { Container, Paper, Snackbar, ThemeProvider } from "@mui/material";
-import type { Theme } from "@mui/material/styles";
-import { useTheme } from "./theme.ts";
+import { useCallback, useEffect, useRef, useState } from "react";
+import styles from "./App.module.css";
 import { CurrencyList } from "./components/CurrencyList.tsx";
-import { AddCurrencyView } from "./components/AddCurrencyView.tsx";
-import type { CurrencyRowData } from "./types/CurrencyRowData.ts";
-import type { SearchSuggestionData } from "./types/SearchSuggestionData.ts";
+import { CurrencyPicker } from "./components/CurrencyPicker.tsx";
 import { StaleRatesNotice } from "./components/StaleRatesNotice.tsx";
+import { Toast } from "./components/Toast.tsx";
 import { useRates } from "./hooks/useRates.ts";
+import type { CurrencyRowData } from "./types/CurrencyRowData.ts";
+import { getCurrency } from "./utils/currencySearch.ts";
 import { convert, isStale, type LoadedRates } from "./utils/rates.ts";
 
-export function App() {
-  const [isAddingCurrency, setIsAddingCurrency] = useState(false);
-  const [currencyRows, setCurrencyRows] = useState<CurrencyRowData[]>(() => {
-    const localStorageState = localStorage.getItem(LOCALSTORAGE_KEY);
-    if (!localStorageState) {
-      return [];
-    }
+const LOCALSTORAGE_KEY = "currencyRows";
+const ANCHOR_KEY = "anchorCode";
+const NO_RATES_MESSAGE =
+  "Couldn't load exchange rates. Connect to the internet and try again.";
+const CURRENCY_CODE_PATTERN = /^[A-Z]{3}$/;
+/** What the first currency chosen starts at, so conversions show at once. */
+const FIRST_AMOUNT = "100";
 
-    try {
-      return sanitizeCurrencyRows(JSON.parse(localStorageState));
-    } catch {
-      return [];
-    }
+export function App() {
+  const [currencyRows, setCurrencyRows] = useState<CurrencyRowData[]>(() =>
+    sanitizeCurrencyRows(readJson(LOCALSTORAGE_KEY)),
+  );
+  // The row the user last typed into; the others are converted from it.
+  const [anchorCode, setAnchorCode] = useState<string | null>(() => {
+    const stored = readString(ANCHOR_KEY);
+    return stored && CURRENCY_CODE_PATTERN.test(stored) ? stored : null;
   });
+  const [isPicking, setIsPicking] = useState(false);
   const [convertingCode, setConvertingCode] = useState<string | null>(null);
-  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [dismissedStaleFetchedAt, setDismissedStaleFetchedAt] = useState<
     string | null
   >(null);
-  // The row the user last typed into; refreshed rates are applied from it.
-  const anchorCodeRef = useRef<string | null>(null);
 
-  const theme = useTheme();
   const { rates, now, getRates } = useRates();
-  const showSearch = isAddingCurrency || currencyRows.length === 0;
+  const effectiveAnchor = currencyRows.some((row) => row.code === anchorCode)
+    ? (anchorCode ?? undefined)
+    : currencyRows[0]?.code;
   const showStaleNotice =
     rates != null &&
     isStale(rates, now) &&
     dismissedStaleFetchedAt !== rates.fetchedAt;
+
+  const anchorRef = useRef(effectiveAnchor);
+  useEffect(() => {
+    anchorRef.current = effectiveAnchor;
+  });
 
   // When fresh rates arrive in the background, update the displayed values.
   const appliedFetchedAtRef = useRef(rates?.fetchedAt);
@@ -46,7 +53,7 @@ export function App() {
     if (!rates || rates.fetchedAt === appliedFetchedAtRef.current) return;
     appliedFetchedAtRef.current = rates.fetchedAt;
     setCurrencyRows((rows) =>
-      reconvertFromAnchor(rows, anchorCodeRef.current, rates),
+      reconvertFromAnchor(rows, anchorRef.current, rates),
     );
   }, [rates]);
 
@@ -58,172 +65,128 @@ export function App() {
     localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(currencyRows));
   }, [currencyRows]);
 
-  async function handleAddRow({ code, emoji, symbol }: SearchSuggestionData) {
-    if (currencyRows.length === 0) {
-      const newRow: CurrencyRowData = {
-        code,
-        emoji,
-        value: "0",
-        symbol,
-      };
+  useEffect(() => {
+    if (anchorCode) localStorage.setItem(ANCHOR_KEY, anchorCode);
+    else localStorage.removeItem(ANCHOR_KEY);
+  }, [anchorCode]);
 
-      setCurrencyRows((rows) => [...rows, newRow]);
-      return;
-    }
+  const dismissToast = useCallback(() => setToastMessage(null), []);
 
-    if (currencyRows.some((row) => row.code === code)) {
-      // No duplicate codes
-      return;
-    }
-
-    const baseRow = currencyRows[0];
-    const newRow: CurrencyRowData = {
-      code,
-      emoji,
-      symbol,
-      value: undefined,
-    };
-    setCurrencyRows((rows) => [...rows, newRow]);
-    setConvertingCode(baseRow.code);
-
+  async function convertFrom(code: string) {
+    setConvertingCode(code);
     try {
-      const rates = await getRates();
-      const value = convert(
-        parseFloat(baseRow.value ?? "0"),
-        baseRow.code,
-        code,
-        rates,
-      );
-      if (value != null) {
-        setCurrencyRows((rows) =>
-          rows.map((row) =>
-            row.code === code ? { ...row, value: value.toFixed(2) } : row,
-          ),
-        );
-      }
+      const loaded = await getRates();
+      setCurrencyRows((rows) => reconvertFromAnchor(rows, code, loaded));
     } catch {
-      setSnackbarMessage(NO_RATES_MESSAGE);
+      setToastMessage(NO_RATES_MESSAGE);
     } finally {
       setConvertingCode(null);
     }
   }
 
-  async function handleRowValueChange(row: CurrencyRowData, newValue: number) {
-    if (Number.isNaN(newValue)) {
-      return;
-    }
-
+  function handleCommitValue(code: string, value: number) {
+    if (!Number.isFinite(value)) return;
     setCurrencyRows((rows) =>
-      rows.map((r) =>
-        r.code === row.code ? { ...r, value: newValue.toString() } : r,
+      rows.map((row) =>
+        row.code === code ? { ...row, value: value.toString() } : row,
       ),
     );
-    anchorCodeRef.current = row.code;
-    setConvertingCode(row.code);
+    setAnchorCode(code);
+    void convertFrom(code);
+  }
 
-    try {
-      const rates = await getRates();
-      setCurrencyRows((rows) => reconvertFromAnchor(rows, row.code, rates));
-    } catch {
-      setSnackbarMessage(NO_RATES_MESSAGE);
-    } finally {
-      setConvertingCode(null);
+  function handlePickerDone(codes: string[]) {
+    setIsPicking(false);
+    const existing = new Map(currencyRows.map((row) => [row.code, row]));
+    const isFirstRun = currencyRows.length === 0;
+    const nextRows = codes.map(
+      (code, index): CurrencyRowData =>
+        existing.get(code) ??
+        newRow(code, isFirstRun && index === 0 ? FIRST_AMOUNT : undefined),
+    );
+    setCurrencyRows(nextRows);
+
+    const anchor = nextRows.some((row) => row.code === anchorCode)
+      ? anchorCode
+      : (nextRows[0]?.code ?? null);
+    setAnchorCode(anchor);
+    if (anchor && nextRows.some((row) => row.value === undefined)) {
+      void convertFrom(anchor);
     }
   }
 
-  function handleRemoveRow(row: CurrencyRowData) {
-    setCurrencyRows((rows) => rows.filter((r) => r.code !== row.code));
-  }
+  const hasCurrencies = currencyRows.length > 0;
 
   return (
-    <ThemeProvider theme={theme}>
-      <Container
-        maxWidth={false}
-        sx={{
-          background: theme.palette.background.default,
-          padding: 0,
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          overflow: "hidden",
-        }}
-      >
-        <Container
-          maxWidth="sm"
-          sx={(theme: Theme) => ({
-            p: 0,
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-
-            [theme.breakpoints.up("sm")]: {
-              justifyContent: "center",
-            },
-          })}
-        >
-          <Paper
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              background: theme.palette.background.default,
-              overflow: "hidden",
-
-              [theme.breakpoints.up("sm")]: {
-                maxHeight: "90vh",
-              },
-
-              [theme.breakpoints.down("sm")]: {
-                boxShadow: "none",
-                flex: 1,
-              },
-            }}
-          >
-            {!showSearch && (
-              <CurrencyList
-                currencyRows={currencyRows}
-                convertingCode={convertingCode}
-                onAddCurrencyClick={() => setIsAddingCurrency(true)}
-                onRowValueChange={handleRowValueChange}
-                onRemoveRow={handleRemoveRow}
-                onReorder={setCurrencyRows}
-              />
-            )}
-
-            {showSearch && (
-              <AddCurrencyView
-                onFinish={() => setIsAddingCurrency(false)}
-                onAddRow={handleAddRow}
-                currencyRows={currencyRows}
-              />
-            )}
-
-            {!showSearch && rates != null && (
+    <div className={styles.viewport}>
+      <main className={styles.app}>
+        {hasCurrencies ? (
+          <div className={styles.content} inert={isPicking}>
+            <CurrencyList
+              currencyRows={currencyRows}
+              anchorCode={effectiveAnchor}
+              rates={rates}
+              convertingCode={convertingCode}
+              onCommitValue={handleCommitValue}
+              onReorder={setCurrencyRows}
+              onManageCurrencies={() => setIsPicking(true)}
+            />
+            {rates != null && showStaleNotice && (
               <StaleRatesNotice
-                open={showStaleNotice}
                 fetchedAt={rates.fetchedAt}
                 now={now}
                 onDismiss={() => setDismissedStaleFetchedAt(rates.fetchedAt)}
               />
             )}
-          </Paper>
-        </Container>
-      </Container>
-      <Snackbar
-        open={snackbarMessage != null}
-        autoHideDuration={4000}
-        onClose={() => setSnackbarMessage(null)}
-        message={snackbarMessage}
-      />
-    </ThemeProvider>
+          </div>
+        ) : (
+          <CurrencyPicker
+            variant="page"
+            selectedCodes={[]}
+            onDone={handlePickerDone}
+          />
+        )}
+        {hasCurrencies && isPicking && (
+          <CurrencyPicker
+            variant="sheet"
+            selectedCodes={currencyRows.map((row) => row.code)}
+            onDone={handlePickerDone}
+            onCancel={() => setIsPicking(false)}
+          />
+        )}
+      </main>
+      <Toast message={toastMessage} onDismiss={dismissToast} />
+    </div>
   );
 }
 
-const LOCALSTORAGE_KEY = "currencyRows";
-const NO_RATES_MESSAGE =
-  "Couldn't load exchange rates. Connect to the internet and try again.";
-const CURRENCY_CODE_PATTERN = /^[A-Z]{3}$/;
+function newRow(code: string, value?: string): CurrencyRowData {
+  const currency = getCurrency(code);
+  return {
+    code,
+    ...(currency?.emoji && { emoji: currency.emoji }),
+    ...(currency?.symbol && { symbol: currency.symbol }),
+    ...(value !== undefined && { value }),
+  };
+}
+
+function readString(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function readJson(key: string): unknown {
+  const stored = readString(key);
+  if (!stored) return undefined;
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return undefined;
+  }
+}
 
 function sanitizeCurrencyRows(value: unknown): CurrencyRowData[] {
   if (!Array.isArray(value)) return [];
@@ -255,13 +218,13 @@ function sanitizeCurrencyRows(value: unknown): CurrencyRowData[] {
  */
 function reconvertFromAnchor(
   rows: CurrencyRowData[],
-  anchorCode: string | null,
+  anchorCode: string | null | undefined,
   rates: LoadedRates,
 ): CurrencyRowData[] {
   const anchor = rows.find((row) => row.code === anchorCode) ?? rows[0];
   if (!anchor) return rows;
 
-  const anchorValue = parseFloat(anchor.value ?? "");
+  const anchorValue = Number.parseFloat(anchor.value ?? "");
   if (!Number.isFinite(anchorValue)) return rows;
 
   return rows.map((row) => {

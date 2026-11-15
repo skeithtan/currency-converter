@@ -2,59 +2,47 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link
-      href="%BASE_URL%favicon.ico"
-      rel="icon"
-    />
-    <!--Prevent scaling- and prevent the user from being able to zoom:-->
+    <link href="%BASE_URL%favicon.ico" rel="icon" sizes="32x32" />
+    <link href="%BASE_URL%icon.svg" rel="icon" type="image/svg+xml" />
+    <!-- Pinch zoom stays available. Inputs use 16px text or larger, so iOS
+         does not zoom in when one is focused. -->
     <meta
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
       name="viewport"
     />
+    <meta content="yes" name="mobile-web-app-capable" />
+    <meta content="yes" name="apple-mobile-web-app-capable" />
+    <meta content="Vert" name="apple-mobile-web-app-title" />
+    <!-- "default" lets iOS draw dark status bar text over the pale header in
+         light mode and light text in dark mode. -->
+    <meta content="default" name="apple-mobile-web-app-status-bar-style" />
     <meta
-      content="yes"
-      name="mobile-web-app-capable"
-    >
-    <meta
-      content="yes"
-      name="apple-mobile-web-app-capable"
-    >
-    <meta
-      content="Vert"
-      name="apple-mobile-web-app-title"
-    />
-    <meta
-      content="black-translucent"
-      name="apple-mobile-web-app-status-bar-style"
-    >
-    <meta
-      content="#178459"
+      content="#edf7f2"
+      media="(prefers-color-scheme: light)"
       name="theme-color"
     />
-    <link
-      href="%BASE_URL%logo192.png"
-      rel="apple-touch-icon"
+    <meta
+      content="#05130c"
+      media="(prefers-color-scheme: dark)"
+      name="theme-color"
     />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link
-      href="%BASE_URL%manifest.webmanifest"
-      rel="manifest"
-    />
+    <link href="%BASE_URL%apple-touch-icon.png" rel="apple-touch-icon" />
+    <link href="%BASE_URL%manifest.webmanifest" rel="manifest" />
 
     <title>Vert - Currency Converter</title>
-  </head>
-  <body style="background-color: #fff; margin: 0">
+    <!-- Paints the right background before the stylesheet arrives. -->
     <style>
-    @media (prefers-color-scheme: dark) {
-      body {
-        /* biome-ignore lint/complexity/noImportantStyles: must beat the inline light background on <body> */
-        background-color: #000 !important;
+      html {
+        background: #ffffff;
       }
-    }
+      @media (prefers-color-scheme: dark) {
+        html {
+          background: #000000;
+        }
+      }
     </style>
+  </head>
+  <body>
     <div id="root"></div>
     <script src="/src/main.tsx" type="module"></script>
   </body>
