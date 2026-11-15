@@ -1,8 +1,9 @@
 import "@fontsource-variable/ibm-plex-sans/index.css";
+import "./styles/tokens.css";
+import "./styles/base.css";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { App } from "./App.tsx";
-import { CssBaseline } from "@mui/material";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
@@ -10,7 +11,6 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <StrictMode>
-    <CssBaseline />
     <App />
   </StrictMode>,
 );

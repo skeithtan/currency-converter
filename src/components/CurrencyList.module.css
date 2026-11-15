@@ -1,0 +1,82 @@
+.header {
+  flex-shrink: 0;
+  padding: env(safe-area-inset-top, 0px) max(12px, env(safe-area-inset-right)) 0
+    max(20px, env(safe-area-inset-left));
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--header-line);
+}
+
+.headerBar {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  margin: 0;
+  color: var(--accent);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.addButton {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  background: var(--accent);
+  color: var(--on-accent);
+  transition: background 0.15s;
+}
+
+.addButton:active {
+  background: var(--accent-pressed);
+}
+
+.addButton:focus-visible {
+  outline-offset: 2px;
+}
+
+.listArea {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.scroller {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.list {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hint {
+  margin: 0;
+  padding: 16px 24px 40px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-align: center;
+}
+
+.fade {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 32px;
+  background: linear-gradient(to bottom, transparent, var(--bg));
+  pointer-events: none;
+}

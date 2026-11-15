@@ -2,7 +2,8 @@
 
 Vert is an installable, offline-capable PWA for converting between currencies,
 with rates from [openexchangerates.org](https://openexchangerates.org), built
-with Vite, React, and MUI, and deployed to GitHub Pages.
+with Vite and React (styled with plain CSS modules), and deployed to GitHub
+Pages.
 
 ## Requirements
 
@@ -52,6 +53,18 @@ on the next launch.
 Exchange rates are saved locally and used immediately. They are refreshed in the
 background after 12 hours, and rates older than 24 hours are still used but
 flagged with a dismissible notice.
+
+## Data files
+
+`src/utils/timeZoneCountries.ts` maps time zones to countries so the currency
+picker can suggest the local currency ("You're in Vietnam") without asking for
+location access. It is generated from the IANA time zone database:
+
+```sh
+node scripts/generate-time-zones.mjs   # reads /usr/share/zoneinfo by default
+```
+
+The app icons in `public/` are rendered from `public/icon.svg`.
 
 ## Deployment
 

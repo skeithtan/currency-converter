@@ -1,215 +1,140 @@
-import { Box, Button, Fade, Grid, Typography, useTheme } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import { CurrencyRow } from "./CurrencyRow.tsx";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useReorder } from "../hooks/useReorder.ts";
 import type { CurrencyRowData } from "../types/CurrencyRowData.ts";
-import { EmptyState } from "./EmptyState.tsx";
+import { describeCrossRate } from "../utils/crossRate.ts";
+import { createAmountFormatter } from "../utils/currencyFormat.ts";
+import { showsWholeUnits, usesLargeAmounts } from "../utils/currencyScale.ts";
+import { getCurrency } from "../utils/currencySearch.ts";
 import { SCROLL_CONTAINER_ATTRIBUTE } from "../utils/keepAboveKeyboard.ts";
-import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
-import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  type DropResult,
-} from "@hello-pangea/dnd";
+import type { LoadedRates } from "../utils/rates.ts";
+import { moveItem } from "../utils/reorder.ts";
+import styles from "./CurrencyList.module.css";
+import { CurrencyRow } from "./CurrencyRow.tsx";
+import { PlusIcon } from "./icons.tsx";
 
 export function CurrencyList({
-  onAddCurrencyClick,
   currencyRows,
-  onRowValueChange,
-  onRemoveRow,
-  onReorder,
+  anchorCode,
+  rates,
   convertingCode,
-}: CurrencyDisplayProps & {
-  onReorder?: (newRows: CurrencyRowData[]) => void;
-}) {
-  const [isEditing, setIsEditing] = useState(false);
-  const theme = useTheme();
+  onCommitValue,
+  onReorder,
+  onManageCurrencies,
+}: CurrencyListProps) {
+  const [editingCode, setEditingCode] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  const focusCodeRef = useRef<string | null>(null);
+  const reorder = useReorder<HTMLUListElement>({
+    enabled: editingCode === null,
+    onMove: move,
+  });
 
+  // After a keyboard reorder, keep focus on the row that moved.
   useEffect(() => {
-    if (currencyRows.length === 0 && isEditing) {
-      setIsEditing(false);
-    }
-  }, [currencyRows.length, isEditing]);
+    const code = focusCodeRef.current;
+    if (!code) return;
+    focusCodeRef.current = null;
+    reorder.listRef.current
+      ?.querySelector<HTMLButtonElement>(`[data-code="${code}"]`)
+      ?.focus();
+  });
 
-  function handleDragEnd(result: DropResult) {
-    if (!result.destination || result.destination.index === result.source.index)
-      return;
-    const newRows = Array.from(currencyRows);
-    const [removed] = newRows.splice(result.source.index, 1);
-    newRows.splice(result.destination.index, 0, removed);
-    onReorder?.(newRows);
+  const display = useMemo(
+    () =>
+      currencyRows.map((row) => {
+        const name = getCurrency(row.code)?.name ?? row.code;
+        const wholeUnits = showsWholeUnits(row.code, rates);
+        const crossRate =
+          rates && anchorCode && row.code !== anchorCode
+            ? describeCrossRate(row.code, anchorCode, rates)
+            : undefined;
+        return {
+          name,
+          wholeUnits,
+          subtitle: crossRate ?? name,
+          formatter: createAmountFormatter(row.code, { wholeUnits }),
+          offerMultipliers: usesLargeAmounts(row.code, rates),
+        };
+      }),
+    [currencyRows, rates, anchorCode],
+  );
+
+  function move(from: number, to: number) {
+    const row = currencyRows[from];
+    if (!row || to < 0 || to >= currencyRows.length) return;
+    onReorder(moveItem(currencyRows, from, to));
+    setAnnouncement(
+      `${row.code} moved to position ${to + 1} of ${currencyRows.length}`,
+    );
   }
 
   return (
     <>
-      <Box
-        sx={{
-          px: 1,
-          py: 2,
-          paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)",
-          borderBottom: "1px solid",
-          borderColor: theme.palette.divider,
-          background: theme.palette.primary.main,
-          color: theme.palette.primary.light,
-          flexShrink: 0,
-        }}
-      >
-        <Box sx={{ position: "relative", minHeight: 40 }}>
-          <Fade in={!isEditing}>
-            <Grid
-              container
-              sx={{
-                alignItems: "center",
-                justifyContent: "space-between",
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-              }}
-            >
-              <Grid>
-                <Button
-                  disabled={currencyRows.length === 0}
-                  onClick={() => setIsEditing(true)}
-                  color="inherit"
-                >
-                  Modify
-                </Button>
-              </Grid>
-              <Grid>
-                <Button
-                  endIcon={<AddIcon />}
-                  onClick={onAddCurrencyClick}
-                  color="inherit"
-                >
-                  Add
-                </Button>
-              </Grid>
-            </Grid>
-          </Fade>
-
-          <Fade in={isEditing}>
-            <Grid
-              sx={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-              }}
-            >
-              <Button color="inherit" onClick={() => setIsEditing(false)}>
-                Done
-              </Button>
-            </Grid>
-          </Fade>
-        </Box>
-
-        <Typography
-          variant="h4"
-          sx={{
-            px: 1,
-            fontWeight: 600,
-            color: theme.palette.primary.contrastText,
-          }}
-        >
-          Currencies
-        </Typography>
-      </Box>
-      <Box
-        sx={{
-          flex: 1,
-          position: "relative",
-          overflow: "hidden",
-          minHeight: 0,
-        }}
-      >
-        <Box
+      <header className={styles.header}>
+        <div className={styles.headerBar}>
+          <h1 className={styles.title}>Currencies</h1>
+          <button
+            type="button"
+            className={styles.addButton}
+            aria-label="Add or remove currencies"
+            onClick={onManageCurrencies}
+          >
+            <PlusIcon size={22} />
+          </button>
+        </div>
+      </header>
+      <div className={styles.listArea}>
+        <div
+          className={styles.scroller}
           {...{ [SCROLL_CONTAINER_ATTRIBUTE]: "" }}
-          sx={{
-            overflow: "auto",
-            height: "100%",
-            WebkitOverflowScrolling: "touch",
-            overscrollBehavior: "contain",
-          }}
         >
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="currency-list">
-              {(provided) => (
-                <div ref={provided.innerRef} {...provided.droppableProps}>
-                  {currencyRows.map((row, index) => (
-                    <Draggable
-                      key={row.code}
-                      draggableId={row.code}
-                      index={index}
-                      isDragDisabled={!isEditing}
-                    >
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          style={{
-                            ...provided.draggableProps.style,
-                            opacity: snapshot.isDragging ? 0.7 : 1,
-                          }}
-                        >
-                          <CurrencyRow
-                            code={row.code}
-                            emoji={row.emoji}
-                            symbol={row.symbol}
-                            value={row.value}
-                            isLoading={
-                              convertingCode !== null &&
-                              convertingCode !== row.code
-                            }
-                            isEditing={isEditing}
-                            onValueChange={(newValue) =>
-                              onRowValueChange(row, newValue)
-                            }
-                            onRemove={() => onRemoveRow(row)}
-                          />
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-          {currencyRows.length === 0 && (
-            <EmptyState
-              icon={CurrencyExchangeIcon}
-              emptyText="Add at least two currencies to see the conversion."
-              buttonText="Add a currency"
-              onButtonClick={onAddCurrencyClick}
-            />
-          )}
-        </Box>
-        {currencyRows.length > 0 && (
-          <Box
-            sx={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 32,
-              background: `linear-gradient(to bottom, transparent, ${theme.palette.background.default})`,
-              pointerEvents: "none",
-            }}
-          />
-        )}
-      </Box>
+          <ul ref={reorder.listRef} className={styles.list}>
+            {currencyRows.map((row, index) => (
+              <CurrencyRow
+                key={row.code}
+                code={row.code}
+                emoji={row.emoji}
+                value={row.value}
+                {...display[index]}
+                isPending={
+                  convertingCode !== null && convertingCode !== row.code
+                }
+                isEditing={editingCode === row.code}
+                reorder={reorder.itemState(index)}
+                onPointerDown={(event) => reorder.onPointerDown(index, event)}
+                shouldSuppressClick={reorder.shouldSuppressClick}
+                onStartEditing={() => setEditingCode(row.code)}
+                onFinishEditing={(value) => {
+                  setEditingCode((code) => (code === row.code ? null : code));
+                  if (value !== undefined) onCommitValue(row.code, value);
+                }}
+                onMoveBy={(delta) => {
+                  focusCodeRef.current = row.code;
+                  move(index, index + delta);
+                }}
+              />
+            ))}
+          </ul>
+          <p className={styles.hint}>
+            Tap an amount to change it. Hold and drag a row to reorder.
+          </p>
+        </div>
+        <div className={styles.fade} />
+      </div>
+      <div className="visually-hidden" aria-live="polite">
+        {announcement}
+      </div>
     </>
   );
 }
 
-interface CurrencyDisplayProps {
+interface CurrencyListProps {
   currencyRows: CurrencyRowData[];
+  /** The row the other amounts are converted from. */
+  anchorCode: string | undefined;
+  rates: LoadedRates | undefined;
   convertingCode: string | null;
-  onAddCurrencyClick(): void;
-  onRowValueChange(row: CurrencyRowData, newValue: number): void;
-  onRemoveRow(row: CurrencyRowData): void;
-  // onReorder is optional and added for drag-and-drop
-  onReorder?: (newRows: CurrencyRowData[]) => void;
+  onCommitValue(code: string, value: number): void;
+  onReorder(rows: CurrencyRowData[]): void;
+  onManageCurrencies(): void;
 }

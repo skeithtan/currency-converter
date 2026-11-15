@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { getAllCurrencies } from "./currencies.ts";
-import { createCurrencyFormatter } from "./currencyFormat.ts";
+import {
+  createAmountFormatter,
+  createCurrencyFormatter,
+} from "./currencyFormat.ts";
 
 const LOCALES = [
   undefined,
@@ -46,6 +49,30 @@ test("the Kyrgyzstani som falls back to the locale's standard symbol", () => {
   assert.equal(format("KGS", "en-US", 2441.11), "KGS 2,441.11");
   assert.equal(format("KGS", "fr-FR", 2441.11), "2 441,11 KGS");
   assert.equal(format("KGS", "ky-KG", 2441.11), "2 441,11 сом");
+});
+
+test("amounts drop the ISO code when the row already shows it", () => {
+  const uzs = createAmountFormatter("UZS", { locales: "en-US" });
+  assert.equal(uzs.symbol, undefined);
+  assert.equal(uzs.format(580000.5), "580,000.50");
+
+  const eur = createAmountFormatter("EUR", { locales: "en-US" });
+  assert.equal(eur.symbol, "€");
+  assert.equal(eur.format(40), "€40.00");
+});
+
+test("whole units drop the minor unit", () => {
+  const uzs = createAmountFormatter("UZS", {
+    locales: "en-US",
+    wholeUnits: true,
+  });
+  assert.equal(uzs.format(580000.46), "580,000");
+
+  const huf = createAmountFormatter("HUF", {
+    locales: "en-US",
+    wholeUnits: true,
+  });
+  assert.equal(huf.format(12345.67).replace(/\u00a0/g, " "), "Ft 12,346");
 });
 
 test("other currencies keep their narrow symbol", () => {

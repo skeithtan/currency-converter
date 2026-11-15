@@ -1,13 +1,34 @@
 import type { SearchSuggestionData } from "../types/SearchSuggestionData.ts";
 import { getAllCurrencies } from "./currencies.ts";
+import {
+  countryForTimeZone,
+  currenciesForCountry,
+  getCountries,
+  getCountryName,
+} from "./countries.ts";
+
+interface SearchKey {
+  /** Upper case, without accents. */
+  full: string;
+  words: string[];
+}
+
+interface IndexedCountry extends SearchKey {
+  name: string;
+}
 
 interface IndexedCurrency {
   code: string;
   name: string;
-  nameUpper: string;
-  nameWords: string[];
+  nameKey: SearchKey;
+  countries: IndexedCountry[];
   emoji?: string;
   symbol?: string;
+}
+
+interface Match {
+  score: number;
+  country?: string;
 }
 
 const POPULAR_CODES = [
@@ -30,76 +51,141 @@ const POPULAR_CODES = [
 ];
 
 let indexedCurrencies: IndexedCurrency[] | undefined;
+let currencyByCode: Map<string, IndexedCurrency> | undefined;
 
 export function getPopularCurrencies(): SearchSuggestionData[] {
-  const currencies = getIndexedCurrencies();
-  return POPULAR_CODES.map((code) => currencies.find((c) => c.code === code))
-    .filter((c): c is IndexedCurrency => c != null)
-    .map(toSuggestion);
+  return POPULAR_CODES.flatMap((code) => {
+    const currency = getCurrency(code);
+    return currency ? [currency] : [];
+  });
 }
 
+/** Every currency, ordered by code. */
+export function getAllSuggestions(): SearchSuggestionData[] {
+  return getIndexedCurrencies().map((currency) => toSuggestion(currency));
+}
+
+export function getCurrency(code: string): SearchSuggestionData | undefined {
+  getIndexedCurrencies();
+  const currency = currencyByCode?.get(code);
+  return currency ? toSuggestion(currency) : undefined;
+}
+
+/**
+ * Matches currencies by code, by name and by the countries that use them, so
+ * "vietnam" finds VND and "panama" finds the US dollar as well as the balboa.
+ */
 export function searchCurrencies(query: string): SearchSuggestionData[] {
-  const currencies = getIndexedCurrencies();
-  const term = query.trim().toUpperCase();
+  const term = normalize(query.trim());
   if (term.length === 0) return getPopularCurrencies();
 
-  const scored: { currency: IndexedCurrency; score: number }[] = [];
-
-  for (const currency of currencies) {
-    const score = scoreCurrency(currency, term);
-    if (score > 0) {
-      scored.push({ currency, score });
-    }
+  const matches: { currency: IndexedCurrency; match: Match }[] = [];
+  for (const currency of getIndexedCurrencies()) {
+    const match = scoreCurrency(currency, term);
+    if (match.score > 0) matches.push({ currency, match });
   }
 
-  // Sort by score desc, then alphabetically by code for stability
-  scored.sort(
+  // Best score first, then alphabetically by code for stability.
+  matches.sort(
     (a, b) =>
-      b.score - a.score || a.currency.code.localeCompare(b.currency.code),
+      b.match.score - a.match.score ||
+      a.currency.code.localeCompare(b.currency.code),
   );
 
-  return scored.map(({ currency }) => toSuggestion(currency));
+  return matches.map(({ currency, match }) =>
+    toSuggestion(currency, match.country),
+  );
+}
+
+export interface LocalCurrency {
+  countryName: string;
+  currency: SearchSuggestionData;
+}
+
+/**
+ * The currency of the country the device's time zone is in. Phones switch
+ * time zone on arrival, so this follows a traveller without asking for
+ * location access.
+ */
+export function getLocalCurrency(timeZone?: string): LocalCurrency | undefined {
+  const zone = timeZone ?? currentTimeZone();
+  if (!zone) return undefined;
+
+  const country = countryForTimeZone(zone);
+  if (!country) return undefined;
+
+  getIndexedCurrencies();
+  const knownCodes = new Set(currencyByCode?.keys());
+  const [code] = currenciesForCountry(country, knownCodes);
+  const currency = code ? getCurrency(code) : undefined;
+  const countryName = getCountryName(country);
+  return currency && countryName ? { countryName, currency } : undefined;
 }
 
 function getIndexedCurrencies(): IndexedCurrency[] {
   if (indexedCurrencies) return indexedCurrencies;
 
-  indexedCurrencies = getAllCurrencies().map(
-    ({ code, name, emoji, symbol }) => ({
-      code,
-      name,
-      nameUpper: name.toUpperCase(),
-      nameWords: name.toUpperCase().split(/\s+/),
-      emoji,
-      symbol,
-    }),
+  const currencies = getAllCurrencies();
+  const knownCodes = new Set(currencies.map(({ code }) => code));
+  const countriesByCurrency = new Map<string, IndexedCountry[]>();
+  for (const country of getCountries(knownCodes)) {
+    for (const code of country.currencies) {
+      const list = countriesByCurrency.get(code) ?? [];
+      for (const name of country.names) {
+        list.push({ name, ...searchKey(name) });
+      }
+      countriesByCurrency.set(code, list);
+    }
+  }
+
+  indexedCurrencies = currencies.map(({ code, name, emoji, symbol }) => ({
+    code,
+    name,
+    nameKey: searchKey(name),
+    countries: countriesByCurrency.get(code) ?? [],
+    emoji,
+    symbol,
+  }));
+  currencyByCode = new Map(
+    indexedCurrencies.map((currency) => [currency.code, currency]),
   );
   return indexedCurrencies;
 }
 
-function scoreCurrency(currency: IndexedCurrency, term: string): number {
-  const { code, nameUpper, nameWords } = currency;
+function scoreCurrency(currency: IndexedCurrency, term: string): Match {
+  const { code, nameKey, countries } = currency;
 
-  // Exact code match
-  if (code === term) return 100;
+  if (code === term) return { score: 100 };
+  if (code.startsWith(term)) return { score: 80 };
+  // "Euro" before "WIR Euro": a name that starts with the query beats one
+  // with a later word that does.
+  if (nameKey.full.startsWith(term)) return { score: 65 };
+  if (startsWithWord(nameKey, term)) return { score: 60 };
 
-  // Code starts with query
-  if (code.startsWith(term)) return 80;
+  const countryStart =
+    countries.find((country) => country.full.startsWith(term)) ??
+    countries.find((country) => startsWithWord(country, term));
+  if (countryStart) return { score: 55, country: countryStart.name };
 
-  // Name word starts with query (word boundary match)
-  if (nameWords.some((word) => word.startsWith(term))) return 60;
+  if (code.includes(term)) return { score: 40 };
+  if (nameKey.full.includes(term)) return { score: 30 };
 
-  // Code contains query
-  if (code.includes(term)) return 40;
+  const countryContains = countries.find((country) =>
+    country.full.includes(term),
+  );
+  if (countryContains) return { score: 25, country: countryContains.name };
 
-  // Name contains query
-  if (nameUpper.includes(term)) return 30;
+  // Fuzzy: every character of the query appears in order.
+  if (fuzzyMatch(code, term)) return { score: 15 };
+  if (fuzzyMatch(nameKey.full, term)) return { score: 10 };
 
-  // Fuzzy: all characters of query appear in order in code or name
-  if (fuzzyMatch(code, term)) return 15;
-  if (fuzzyMatch(nameUpper, term)) return 10;
+  return { score: 0 };
+}
 
-  return 0;
+function startsWithWord(key: SearchKey, term: string): boolean {
+  return (
+    key.full.startsWith(term) || key.words.some((word) => word.startsWith(term))
+  );
 }
 
 function fuzzyMatch(text: string, query: string): boolean {
@@ -110,11 +196,39 @@ function fuzzyMatch(text: string, query: string): boolean {
   return qi === query.length;
 }
 
-function toSuggestion(c: IndexedCurrency): SearchSuggestionData {
+function searchKey(text: string): SearchKey {
+  const full = normalize(text);
+  return { full, words: full.split(/[\s\-‐(),.]+/).filter(Boolean) };
+}
+
+/**
+ * Upper case without accents or apostrophes, so "cote divoire" and
+ * "côte d'ivoire" both find "Côte d’Ivoire", and "paanga" the paʻanga.
+ */
+function normalize(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\p{M}'’‘ʼʻ`]/gu, "")
+    .toUpperCase();
+}
+
+function currentTimeZone(): string | undefined {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    return undefined;
+  }
+}
+
+function toSuggestion(
+  currency: IndexedCurrency,
+  matchedCountry?: string,
+): SearchSuggestionData {
   return {
-    code: c.code,
-    emoji: c.emoji,
-    symbol: c.symbol,
-    name: c.name,
+    code: currency.code,
+    name: currency.name,
+    emoji: currency.emoji,
+    symbol: currency.symbol,
+    ...(matchedCountry && { matchedCountry }),
   };
 }
