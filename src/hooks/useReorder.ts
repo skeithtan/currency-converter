@@ -99,6 +99,25 @@ export function useReorder<T extends HTMLElement>({
 
   useEffect(() => () => endRef.current(false), []);
 
+  // Once a row has lifted, stop the browser scrolling instead of dragging.
+  // WebKit only honours preventDefault() from a non-passive touchmove
+  // listener that was registered before the touch began, so this one stays
+  // attached for the life of the list and only acts during a drag.
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const preventScrollWhileDragging = (event: TouchEvent) => {
+      if (gestureRef.current?.active && event.cancelable) {
+        event.preventDefault();
+      }
+    };
+    list.addEventListener("touchmove", preventScrollWhileDragging, {
+      passive: false,
+    });
+    return () =>
+      list.removeEventListener("touchmove", preventScrollWhileDragging);
+  }, []);
+
   function lift(gesture: Gesture) {
     const list = listRef.current;
     if (!list) return end(false);
@@ -180,23 +199,17 @@ export function useReorder<T extends HTMLElement>({
     const cancel = (cancelEvent: PointerEvent) => {
       if (cancelEvent.pointerId === gesture.pointerId) end(false);
     };
-    // Once lifted, stop the browser from scrolling instead of dragging.
-    const touchMove = (touchEvent: TouchEvent) => {
-      if (gesture.active && touchEvent.cancelable) touchEvent.preventDefault();
-    };
     // A long press would otherwise open the context menu on Android.
     const contextMenu = (menuEvent: Event) => menuEvent.preventDefault();
 
     globalThis.addEventListener("pointermove", move);
     globalThis.addEventListener("pointerup", up);
     globalThis.addEventListener("pointercancel", cancel);
-    globalThis.addEventListener("touchmove", touchMove, { passive: false });
     globalThis.addEventListener("contextmenu", contextMenu);
     removeListenersRef.current = () => {
       globalThis.removeEventListener("pointermove", move);
       globalThis.removeEventListener("pointerup", up);
       globalThis.removeEventListener("pointercancel", cancel);
-      globalThis.removeEventListener("touchmove", touchMove);
       globalThis.removeEventListener("contextmenu", contextMenu);
     };
   }
