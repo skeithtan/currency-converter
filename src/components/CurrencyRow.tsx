@@ -248,18 +248,25 @@ export function CurrencyRow({
   const itemStyle: CSSProperties | undefined = gesture.offset
     ? { transform: `translateY(${gesture.offset}px)` }
     : undefined;
-  const rowClassName = [styles.row, gesture.swiping && styles.swiping]
+  // While being deleted, the row stays where the swipe left it, with no
+  // transition: a running CSS transition would override the slide-out
+  // animation, so the row would spring back before leaving.
+  const isRemoving = removeFrom !== undefined;
+  const swipeX = isRemoving ? removeFrom : gesture.swipeOffset;
+  const armed = gesture.swipeArmed || (isRemoving && removeFrom < 0);
+  const rowClassName = [
+    styles.row,
+    (gesture.swiping || isRemoving) && styles.swiping,
+  ]
     .filter(Boolean)
     .join(" ");
-  const rowStyle: CSSProperties | undefined = gesture.swipeOffset
-    ? { transform: `translateX(${gesture.swipeOffset}px)` }
+  const rowStyle: CSSProperties | undefined = swipeX
+    ? { transform: `translateX(${swipeX}px)` }
     : undefined;
   // Past the threshold the label leaves the edge and follows the row, 20px
   // clear of it, which is the cue that letting go will delete.
-  const labelStyle: CSSProperties | undefined = gesture.swipeArmed
-    ? {
-        transform: `translateX(calc(100% - ${-gesture.swipeOffset - 40}px))`,
-      }
+  const labelStyle: CSSProperties | undefined = armed
+    ? { transform: `translateX(calc(100% - ${-swipeX - 40}px))` }
     : undefined;
 
   if (isEditing) {
@@ -335,7 +342,7 @@ export function CurrencyRow({
       {...{ [ROW_ITEM_ATTRIBUTE]: "" }}
     >
       <div
-        className={`${styles.swipeAction} ${gesture.swipeArmed ? styles.armed : ""}`}
+        className={`${styles.swipeAction} ${armed ? styles.armed : ""}`}
         aria-hidden="true"
       >
         <span className={styles.swipeLabel} style={labelStyle}>

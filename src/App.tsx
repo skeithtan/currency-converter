@@ -43,9 +43,11 @@ export function App() {
     dismissedStaleFetchedAt !== rates.fetchedAt;
 
   const anchorRef = useRef(effectiveAnchor);
+  const anchorCodeRef = useRef(anchorCode);
   const ratesRef = useRef(rates);
   useEffect(() => {
     anchorRef.current = effectiveAnchor;
+    anchorCodeRef.current = anchorCode;
     ratesRef.current = rates;
   });
 
@@ -115,11 +117,19 @@ export function App() {
               removed,
               ...rows.slice(index),
             ];
-            // Amounts may have changed since; bring the row back up to date.
+            // The row last typed into comes back exactly as typed. Any other
+            // row is brought in line with the amounts shown now, leaving
+            // every other row untouched.
             const latestRates = ratesRef.current;
-            return latestRates
-              ? reconvertFromAnchor(restored, anchorRef.current, latestRates)
-              : restored;
+            if (anchorCodeRef.current === code || !latestRates) {
+              return restored;
+            }
+            return convertRowFromAnchor(
+              restored,
+              code,
+              anchorRef.current,
+              latestRates,
+            );
           });
         },
       },
@@ -242,6 +252,26 @@ function sanitizeCurrencyRows(value: unknown): CurrencyRowData[] {
     if (typeof storedRow.value === "string") row.value = storedRow.value;
     return [row];
   });
+}
+
+/** Recomputes one row's amount from the anchor row, leaving the rest as is. */
+function convertRowFromAnchor(
+  rows: CurrencyRowData[],
+  code: string,
+  anchorCode: string | null | undefined,
+  rates: LoadedRates,
+): CurrencyRowData[] {
+  const anchor = rows.find((row) => row.code === anchorCode);
+  const anchorValue = Number.parseFloat(anchor?.value ?? "");
+  if (!anchor || anchor.code === code || !Number.isFinite(anchorValue)) {
+    return rows;
+  }
+  const value = convert(anchorValue, anchor.code, code, rates);
+  return value == null
+    ? rows
+    : rows.map((row) =>
+        row.code === code ? { ...row, value: value.toFixed(2) } : row,
+      );
 }
 
 /**
