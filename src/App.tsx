@@ -3,7 +3,7 @@ import styles from "./App.module.css";
 import { CurrencyList } from "./components/CurrencyList.tsx";
 import { CurrencyPicker } from "./components/CurrencyPicker.tsx";
 import { StaleRatesNotice } from "./components/StaleRatesNotice.tsx";
-import { Toast } from "./components/Toast.tsx";
+import { Toast, type ToastData } from "./components/Toast.tsx";
 import { useRates } from "./hooks/useRates.ts";
 import type { CurrencyRowData } from "./types/CurrencyRowData.ts";
 import { getCurrency } from "./utils/currencySearch.ts";
@@ -28,7 +28,7 @@ export function App() {
   });
   const [isPicking, setIsPicking] = useState(false);
   const [convertingCode, setConvertingCode] = useState<string | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastData | null>(null);
   const [dismissedStaleFetchedAt, setDismissedStaleFetchedAt] = useState<
     string | null
   >(null);
@@ -43,8 +43,10 @@ export function App() {
     dismissedStaleFetchedAt !== rates.fetchedAt;
 
   const anchorRef = useRef(effectiveAnchor);
+  const ratesRef = useRef(rates);
   useEffect(() => {
     anchorRef.current = effectiveAnchor;
+    ratesRef.current = rates;
   });
 
   // When fresh rates arrive in the background, update the displayed values.
@@ -70,7 +72,7 @@ export function App() {
     else localStorage.removeItem(ANCHOR_KEY);
   }, [anchorCode]);
 
-  const dismissToast = useCallback(() => setToastMessage(null), []);
+  const dismissToast = useCallback(() => setToast(null), []);
 
   async function convertFrom(code: string) {
     setConvertingCode(code);
@@ -78,7 +80,7 @@ export function App() {
       const loaded = await getRates();
       setCurrencyRows((rows) => reconvertFromAnchor(rows, code, loaded));
     } catch {
-      setToastMessage(NO_RATES_MESSAGE);
+      setToast({ message: NO_RATES_MESSAGE });
     } finally {
       setConvertingCode(null);
     }
@@ -93,6 +95,35 @@ export function App() {
     );
     setAnchorCode(code);
     void convertFrom(code);
+  }
+
+  function handleRemove(code: string) {
+    const index = currencyRows.findIndex((row) => row.code === code);
+    const removed = currencyRows[index];
+    if (!removed) return;
+    setCurrencyRows((rows) => rows.filter((row) => row.code !== code));
+    setToast({
+      message: `Removed ${getCurrency(code)?.name ?? code}`,
+      action: {
+        label: "Undo",
+        onAction: () => {
+          setToast(null);
+          setCurrencyRows((rows) => {
+            if (rows.some((row) => row.code === code)) return rows;
+            const restored = [
+              ...rows.slice(0, index),
+              removed,
+              ...rows.slice(index),
+            ];
+            // Amounts may have changed since; bring the row back up to date.
+            const latestRates = ratesRef.current;
+            return latestRates
+              ? reconvertFromAnchor(restored, anchorRef.current, latestRates)
+              : restored;
+          });
+        },
+      },
+    });
   }
 
   function handlePickerDone(codes: string[]) {
@@ -129,6 +160,7 @@ export function App() {
               convertingCode={convertingCode}
               onCommitValue={handleCommitValue}
               onReorder={setCurrencyRows}
+              onRemove={handleRemove}
               onManageCurrencies={() => setIsPicking(true)}
             />
             {rates != null && showStaleNotice && (
@@ -155,7 +187,7 @@ export function App() {
           />
         )}
       </main>
-      <Toast message={toastMessage} onDismiss={dismissToast} />
+      <Toast toast={toast} onDismiss={dismissToast} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 .item {
   position: relative;
+  overflow: hidden;
   background: var(--bg);
   border-bottom: 1px solid var(--divider);
   /* A long press lifts the row; it must not select text or open a callout. */
@@ -29,9 +30,40 @@
     max(20px, env(safe-area-inset-left));
   border: 0;
   border-radius: inherit;
-  background: transparent;
+  /* Opaque, so the delete layer behind only shows where the row has moved. */
+  background: var(--bg);
   color: var(--text);
   text-align: left;
+  position: relative;
+  z-index: 1;
+  /* Vertical pans scroll the list; sideways moves come to the swipe code. */
+  touch-action: pan-y;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Following the finger: no easing. */
+.swiping {
+  transition: none;
+}
+
+.swipeAction {
+  position: absolute;
+  inset: 0;
+  background: var(--danger);
+  color: var(--on-danger);
+}
+
+.swipeLabel {
+  position: absolute;
+  top: 0;
+  right: 20px;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: transform 0.18s ease-out;
 }
 
 .row:active,

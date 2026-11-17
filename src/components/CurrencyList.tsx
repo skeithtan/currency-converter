@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useReorder } from "../hooks/useReorder.ts";
+import { useRowGestures } from "../hooks/useRowGestures.ts";
 import type { CurrencyRowData } from "../types/CurrencyRowData.ts";
 import { describeCrossRate } from "../utils/crossRate.ts";
 import { createAmountFormatter } from "../utils/currencyFormat.ts";
@@ -19,22 +19,32 @@ export function CurrencyList({
   convertingCode,
   onCommitValue,
   onReorder,
+  onRemove,
   onManageCurrencies,
 }: CurrencyListProps) {
   const [editingCode, setEditingCode] = useState<string | null>(null);
+  // The row playing its delete animation, and where that starts from.
+  const [removing, setRemoving] = useState<{
+    code: string;
+    from: number;
+  } | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const focusCodeRef = useRef<string | null>(null);
-  const reorder = useReorder<HTMLUListElement>({
-    enabled: editingCode === null,
+  const gestures = useRowGestures<HTMLUListElement>({
+    enabled: editingCode === null && removing === null,
     onMove: move,
+    onSwipeDelete: (index, offset) => {
+      const row = currencyRows[index];
+      if (row) setRemoving({ code: row.code, from: offset });
+    },
   });
 
-  // After a keyboard reorder, keep focus on the row that moved.
+  // After a keyboard reorder or delete, keep focus where the user was.
   useEffect(() => {
     const code = focusCodeRef.current;
     if (!code) return;
     focusCodeRef.current = null;
-    reorder.listRef.current
+    gestures.listRef.current
       ?.querySelector<HTMLButtonElement>(`[data-code="${code}"]`)
       ?.focus();
   });
@@ -88,7 +98,7 @@ export function CurrencyList({
           className={styles.scroller}
           {...{ [SCROLL_CONTAINER_ATTRIBUTE]: "" }}
         >
-          <ul ref={reorder.listRef} className={styles.list}>
+          <ul ref={gestures.listRef} className={styles.list}>
             {currencyRows.map((row, index) => (
               <CurrencyRow
                 key={row.code}
@@ -100,9 +110,12 @@ export function CurrencyList({
                   convertingCode !== null && convertingCode !== row.code
                 }
                 isEditing={editingCode === row.code}
-                reorder={reorder.itemState(index)}
-                onPointerDown={(event) => reorder.onPointerDown(index, event)}
-                shouldSuppressClick={reorder.shouldSuppressClick}
+                gesture={gestures.itemState(index)}
+                removeFrom={
+                  removing?.code === row.code ? removing.from : undefined
+                }
+                onPointerDown={(event) => gestures.onPointerDown(index, event)}
+                shouldSuppressClick={gestures.shouldSuppressClick}
                 onStartEditing={() => setEditingCode(row.code)}
                 onFinishEditing={(value) => {
                   setEditingCode((code) => (code === row.code ? null : code));
@@ -112,11 +125,23 @@ export function CurrencyList({
                   focusCodeRef.current = row.code;
                   move(index, index + delta);
                 }}
+                onRequestRemove={() => {
+                  if (removing) return;
+                  const neighbour =
+                    currencyRows[index + 1] ?? currencyRows[index - 1];
+                  focusCodeRef.current = neighbour?.code ?? null;
+                  setRemoving({ code: row.code, from: 0 });
+                }}
+                onRemoved={() => {
+                  setRemoving(null);
+                  onRemove(row.code);
+                }}
               />
             ))}
           </ul>
           <p className={styles.hint}>
-            Tap an amount to change it. Hold and drag a row to reorder.
+            Tap an amount to change it. Hold and drag to reorder, or swipe left
+            to delete.
           </p>
         </div>
         <div className={styles.fade} />
@@ -136,5 +161,6 @@ interface CurrencyListProps {
   convertingCode: string | null;
   onCommitValue(code: string, value: number): void;
   onReorder(rows: CurrencyRowData[]): void;
+  onRemove(code: string): void;
   onManageCurrencies(): void;
 }

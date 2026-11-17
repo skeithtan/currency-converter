@@ -12,14 +12,32 @@
 
 .toast {
   max-width: 420px;
-  margin: 0;
-  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 4px 16px;
   background: var(--toast-bg);
   border-radius: 12px;
   box-shadow: var(--shadow-lifted);
   color: var(--toast-text);
-  font-size: 15px;
+  pointer-events: auto;
   animation: pop-in 0.2s ease-out;
+}
+
+.message {
+  margin: 8px 12px 8px 0;
+  font-size: 15px;
+}
+
+.action {
+  height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--toast-action);
+  font-size: 15px;
+  font-weight: 600;
 }
 
 @keyframes pop-in {
