@@ -9,8 +9,10 @@ import {
   useRef,
   useState,
 } from "react";
-import type { ReorderItemState } from "../hooks/useReorder.ts";
-import { REORDER_ITEM_ATTRIBUTE } from "../hooks/useReorder.ts";
+import {
+  ROW_ITEM_ATTRIBUTE,
+  type RowGestureState,
+} from "../hooks/useRowGestures.ts";
 import {
   draftToNumber,
   formatDraft,
@@ -24,9 +26,12 @@ import type { AmountFormatter } from "../utils/currencyFormat.ts";
 import { openKeyboardNear } from "../utils/focusAndOpenKeyboard.ts";
 import { keepAboveKeyboard } from "../utils/keepAboveKeyboard.ts";
 import styles from "./CurrencyRow.module.css";
+import { TrashIcon } from "./icons.tsx";
 
 // Long enough for a tap on a k/M chip to land before the blur commits.
 const COMMIT_DELAY_MS = 150;
+const SLIDE_OUT_MS = 180;
+const COLLAPSE_MS = 200;
 
 const MULTIPLIERS = [
   { label: "k", word: "thousand", places: 3, description: "times 1,000" },
@@ -44,13 +49,17 @@ export function CurrencyRow({
   offerMultipliers,
   isPending,
   isEditing,
-  reorder,
+  gesture,
+  removeFrom,
   onPointerDown,
   shouldSuppressClick,
   onStartEditing,
   onFinishEditing,
   onMoveBy,
+  onRequestRemove,
+  onRemoved,
 }: CurrencyRowProps) {
+  const itemRef = useRef<HTMLLIElement>(null);
   const rowRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -106,6 +115,53 @@ export function CurrencyRow({
   });
 
   useEffect(() => () => clearTimeout(commitTimerRef.current), []);
+
+  // Being deleted: slide the row out from where the swipe left it, then close
+  // the gap. The last frames are held until the row is actually removed, so
+  // it never flashes back in between.
+  const onRemovedRef = useRef(onRemoved);
+  useEffect(() => {
+    onRemovedRef.current = onRemoved;
+  });
+  useLayoutEffect(() => {
+    if (removeFrom === undefined) return;
+    const item = itemRef.current;
+    const button = buttonRef.current;
+    const reduceMotion = globalThis.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (!item || !button || reduceMotion || !item.animate) {
+      onRemovedRef.current();
+      return;
+    }
+
+    let cancelled = false;
+    const slide = button.animate(
+      [
+        { transform: `translateX(${removeFrom}px)` },
+        { transform: "translateX(-100%)" },
+      ],
+      { duration: SLIDE_OUT_MS, easing: "ease-in", fill: "forwards" },
+    );
+    slide.finished
+      .then(() => {
+        if (cancelled) return;
+        return item.animate(
+          [
+            { height: `${item.offsetHeight}px`, borderBottomWidth: "1px" },
+            { height: "0px", borderBottomWidth: "0px" },
+          ],
+          { duration: COLLAPSE_MS, easing: "ease", fill: "forwards" },
+        ).finished;
+      })
+      .then(() => {
+        if (!cancelled) onRemovedRef.current();
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [removeFrom]);
 
   function startEditing() {
     if (shouldSuppressClick()) return;
@@ -170,8 +226,13 @@ export function CurrencyRow({
   }
 
   function handleButtonKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
-    if (!event.altKey) return;
-    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+    if (event.key === "Delete") {
+      event.preventDefault();
+      onRequestRemove();
+    } else if (
+      event.altKey &&
+      (event.key === "ArrowUp" || event.key === "ArrowDown")
+    ) {
       event.preventDefault();
       onMoveBy(event.key === "ArrowUp" ? -1 : 1);
     }
@@ -179,18 +240,38 @@ export function CurrencyRow({
 
   const itemClassName = [
     styles.item,
-    reorder.dragging && !reorder.lifted && styles.shifting,
-    reorder.lifted && styles.lifted,
+    gesture.dragging && !gesture.lifted && styles.shifting,
+    gesture.lifted && styles.lifted,
   ]
     .filter(Boolean)
     .join(" ");
-  const itemStyle: CSSProperties | undefined = reorder.offset
-    ? { transform: `translateY(${reorder.offset}px)` }
+  const itemStyle: CSSProperties | undefined = gesture.offset
+    ? { transform: `translateY(${gesture.offset}px)` }
+    : undefined;
+  // While being deleted, the row stays where the swipe left it, with no
+  // transition: a running CSS transition would override the slide-out
+  // animation, so the row would spring back before leaving.
+  const isRemoving = removeFrom !== undefined;
+  const swipeX = isRemoving ? removeFrom : gesture.swipeOffset;
+  const armed = gesture.swipeArmed || (isRemoving && removeFrom < 0);
+  const rowClassName = [
+    styles.row,
+    (gesture.swiping || isRemoving) && styles.swiping,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const rowStyle: CSSProperties | undefined = swipeX
+    ? { transform: `translateX(${swipeX}px)` }
+    : undefined;
+  // Past the threshold the label leaves the edge and follows the row, 20px
+  // clear of it, which is the cue that letting go will delete.
+  const labelStyle: CSSProperties | undefined = armed
+    ? { transform: `translateX(calc(100% - ${-swipeX - 40}px))` }
     : undefined;
 
   if (isEditing) {
     return (
-      <li className={styles.item} {...{ [REORDER_ITEM_ATTRIBUTE]: "" }}>
+      <li className={styles.item} {...{ [ROW_ITEM_ATTRIBUTE]: "" }}>
         <div ref={rowRef} className={styles.editing}>
           <div className={styles.editTop}>
             <span className={styles.flag} aria-hidden="true">
@@ -254,16 +335,28 @@ export function CurrencyRow({
 
   return (
     <li
+      ref={itemRef}
       className={itemClassName}
       style={itemStyle}
       onPointerDown={onPointerDown}
-      {...{ [REORDER_ITEM_ATTRIBUTE]: "" }}
+      {...{ [ROW_ITEM_ATTRIBUTE]: "" }}
     >
+      <div
+        className={`${styles.swipeAction} ${armed ? styles.armed : ""}`}
+        aria-hidden="true"
+      >
+        <span className={styles.swipeLabel} style={labelStyle}>
+          <TrashIcon size={20} />
+          Delete
+        </span>
+      </div>
       <button
         ref={buttonRef}
         type="button"
-        className={styles.row}
+        className={rowClassName}
+        style={rowStyle}
         data-code={code}
+        aria-keyshortcuts="Delete Alt+ArrowUp Alt+ArrowDown"
         aria-label={[
           name,
           formatted || "no amount",
@@ -302,11 +395,20 @@ interface CurrencyRowProps {
   /** Another row's amount is being converted into this one. */
   isPending: boolean;
   isEditing: boolean;
-  reorder: ReorderItemState;
+  gesture: RowGestureState;
+  /**
+   * Set when the row is being deleted: the horizontal offset its slide-out
+   * animation starts from (where the swipe left it, or 0).
+   */
+  removeFrom?: number;
   onPointerDown(event: PointerEvent<HTMLElement>): void;
   shouldSuppressClick(): boolean;
   onStartEditing(): void;
   /** Called with the new amount, or undefined when nothing was entered. */
   onFinishEditing(value: number | undefined): void;
   onMoveBy(delta: -1 | 1): void;
+  /** The Delete key was pressed on the row. */
+  onRequestRemove(): void;
+  /** The delete animation has finished; the row can go. */
+  onRemoved(): void;
 }
